@@ -1,0 +1,792 @@
+;;-----------------------------------------------------------------------------------------
+;;	frisc-pynq-system
+;;	
+;;	sve informacije o načinima spajanja i definicijama ulazno/izlaznih jedinica možete 
+;;	pročitati u dokumentu:
+;;		/pynq-lab-starter/docs/pynq-frisc-system.pdf
+;;
+;;	sve informacije o programiranju i konfiguriranju pynq pločice možete pročitati u dokumentu:
+;;		/pynq-lab-starter/docs/upute-za-programiranje.pdf
+;;
+;;	ovaj predložak ima predefinirani skup memorijskih adresa ui jedinica.
+;;	ui jedinice koje su postavljene u sustavu:
+;; 		- 4 ledice i 2 rgb ledice
+;;		- 4 dugmića i 2 prekidača
+;;		- 2 x 8bit gpio (jedan ulazni i jedan izlazni)
+;; 		- 2 x uart kontrolera (za bluetooth ili seriju)
+;; 		- kontroler za i2c
+;;		- kontroler za SPI
+;;
+;;	za sva pitanja možete se obratiti na:
+;;		alen.duspara@fer.hr
+;;		tomislav.bicanic@fer.hr
+;;		marko.pacadi@fer.hr
+;; 		luka.macan@fer.hr
+;;
+;;-----------------------------------------------------------------------------------------
+
+;; adrese ulazno/izlaznih jedinica	
+GPIO0_LEDICE    EQU	0FFF80000
+GPIO0_RGB 	    EQU	0FFF80008
+
+GPIO1_SWITCHES  EQU	0FFF81000
+GPIO1_BUTTONS   EQU	0FFF81008
+GPIO1_ISR	    EQU	0FFF81120
+GPIO1_GIER	    EQU	0FFF8111C
+GPIO1_IER	    EQU	0FFF81128
+
+GPIO2_INPUT		EQU	0FFF82000
+GPIO2_OUTPUT	EQU	0FFF82008
+GPIO2_ISR	    EQU	0FFF82120
+GPIO2_GIER	    EQU	0FFF8211C
+GPIO2_IER	    EQU	0FFF82128
+
+UART0_RX	    EQU 0FFF83000
+UART0_TX	    EQU 0FFF83004
+UART0_STAT	    EQU 0FFF83008
+UART0_CTRL	    EQU 0FFF8300C
+
+UART1_RX	    EQU 0FFF84000
+UART1_TX	    EQU 0FFF84004
+UART1_STAT	    EQU 0FFF84008
+UART1_CTRL	    EQU 0FFF8400C
+
+I2C_GIE			EQU 0FFF8501C 	; i2c global interrupt enable register
+I2C_ISR			EQU 0FFF85020 	; i2c interrupt status register
+I2C_IER			EQU 0FFF85028 	; i2c interrupt enable register
+I2C_CR			EQU 0FFF85100 	; i2c control register
+I2C_SR			EQU 0FFF85104 	; i2c status register
+I2C_TX_FIFO		EQU 0FFF85108 	; i2c transmit fifo
+I2C_RX_FIFO	 	EQU 0FFF8510C 	; i2c recieve fifo
+I2C_SA			EQU 0FFF85110 	; i2c slave adress register (adresa na kojoj ce se odazivati - slave mode)
+I2C_TX_FIFO_OCY EQU 0FFF85114 	; i2c transmit fifo occupancy 0 = 1 podatak, 1 = 2 podatka...
+I2C_RX_FIFO_OCY	EQU 0FFF85118 	; i2c recieve fifo occupancy 0 = 1 podatak, 1 = 2 podatka...
+I2C_RX_FIFO_PIR	EQU 0FFF85120 	; i2c rx fifo - nakon koliko podataka ce se napraviti interrupt, ondosno max velicina RX_FIFO-a
+
+SPI_CR			EQU 0FFF86060 	; SPI control register
+SPI_SR			EQU 0FFF86064 	; SPI status register
+SPI_DTR			EQU 0FFF86068 	; SPI data transmit register
+SPI_DRR			EQU 0FFF8606C 	; SPI data receive register
+SPI_SSR			EQU 0FFF86070 	; SPI slave select register
+SPI_GIER		EQU 0FFF8601C 	; SPI global interrupt enable register
+SPI_IER			EQU 0FFF86028 	; SPI interrupt enable register
+SPI_ISR			EQU 0FFF86020 	; SPI interrupt status register
+
+TIMER0_CSR		EQU	0FFF87000 	; timer 0 control and status register
+TIMER0_LR		EQU	0FFF87004 	; timer 0 load register
+TIMER0_CR		EQU	0FFF87008 	; timer 0 counter register
+TIMER1_CSR		EQU	0FFF87010 	; timer 1 control and status register
+TIMER1_LR		EQU	0FFF87014 	; timer 1 load register
+TIMER1_CR		EQU	0FFF87018 	; timer 1 counter register
+
+INTC_NMI_ISR	EQU 0FFF88000   ; interrupt status register
+INTC_NMI_IAR	EQU 0FFF8800C   ; interrupt aknowledge register
+INTC_NMI_SIE	EQU 0FFF88010   ; set interrupt enable
+INTC_NMI_CIE	EQU 0FFF88014   ; clear interrupt enable
+INTC_NMI_MER	EQU 0FFF8801C   ; master enable register
+
+INTC_MI_ISR		EQU 0FFF89000	; interrupt status register
+INTC_MI_IAR		EQU 0FFF8900C	; interrupt aknowledge register
+INTC_MI_SIE		EQU 0FFF89010	; set interrupt enable
+INTC_MI_CIE		EQU 0FFF89014	; clear interrupt enable
+INTC_MI_MER		EQU 0FFF8901C	; master enable register
+
+; lcd konstante
+ILI9341_TFTWIDTH  	EQU %D 240
+ILI9341_TFTHEIGHT 	EQU %D 320
+; lcd komande - za znacenja vidjeti datasheet str 83
+ILI9341_SWRESET   	EQU  01
+ILI9341_SLPOUT    	EQU  11
+ILI9341_INVOFF    	EQU  20
+ILI9341_INVON     	EQU  21
+ILI9341_GAMMASET  	EQU  26
+ILI9341_DISPON    	EQU  29
+ILI9341_CASET     	EQU  2A
+ILI9341_PASET     	EQU  2B
+ILI9341_RAMWR     	EQU  2C
+ILI9341_RAMRD     	EQU  2E
+ILI9341_MADCTL    	EQU  36
+ILI9341_PIXFMT    	EQU  3A
+ILI9341_FRMCTR1   	EQU 0B1
+ILI9341_DFUNCTR   	EQU 0B6
+ILI9341_PWCTR1    	EQU 0C0
+ILI9341_PWCTR2    	EQU 0C1
+ILI9341_VMCTR1    	EQU 0C5
+ILI9341_VMCTR2    	EQU 0C7
+ILI9341_GMCTRP1   	EQU 0E0
+ILI9341_GMCTRN1   	EQU 0E1
+
+; game konstante
+P_PADDLE_WIDTH		EQU 50
+P_PADDLE_HEIGHT		EQU 10
+P_PADDLE_COLOR		EQU 0FFFF ; bijela
+P_BACKGROUND_COLOR	EQU 0 ; crna
+
+				ORG 0
+				
+MAIN			MOVE 2000, SP
+
+
+				; signaliziraj pocetak
+				MOVE %B 100001, R0
+				STORE R0, (GPIO0_RGB)
+				
+
+				; SPI config
+				;		876543210
+				MOVE %B 110000110, R0 ; 0x186
+				STORE R0, (SPI_CR)
+				MOVE 0, R0 ; slave select
+				STORE R0, (SPI_SSR)
+
+
+				; reset lcd
+				MOVE ILI9341_SWRESET, R6
+				CALL SEND_CMD
+
+				MOVE 100, R6
+				CALL WAIT
+
+				MOVE %B 0001, R0
+				STORE R0, (GPIO0_LEDICE)
+
+
+				; init lcd
+				; (sekvenca preuzeta iz python libraryja)
+
+				MOVE ILI9341_PWCTR1, R6
+				CALL SEND_CMD
+
+				MOVE 0x23, R6
+				CALL SEND_DATA
+
+				MOVE ILI9341_PWCTR2, R6
+				CALL SEND_CMD
+
+				MOVE 0x10, R6
+				CALL SEND_DATA
+
+				MOVE ILI9341_VMCTR1, R6
+				CALL SEND_CMD
+
+				; block([0x3e, 0x28])
+				MOVE 2, R0
+				PUSH R0
+				MOVE INIT_BLOCK1, R0
+				PUSH R0
+				CALL SEND_BLOCK
+				ADD SP, 8, SP
+
+				MOVE ILI9341_VMCTR2, R6
+				CALL SEND_CMD
+
+				MOVE 0x86, R6
+				CALL SEND_DATA
+
+				MOVE ILI9341_MADCTL, R6
+				CALL SEND_CMD
+
+				MOVE 0x48, R6
+				CALL SEND_DATA
+
+				MOVE ILI9341_PIXFMT, R6
+				CALL SEND_CMD
+
+				MOVE 0x55, R6
+				CALL SEND_DATA
+
+				MOVE ILI9341_FRMCTR1, R6
+				CALL SEND_CMD
+
+				; block([0x00, 0x18])
+				MOVE 2, R0
+				PUSH R0
+				MOVE INIT_BLOCK2, R0
+				PUSH R0
+				CALL SEND_BLOCK
+				ADD SP, 8, SP
+
+				MOVE ILI9341_DFUNCTR, R6
+				CALL SEND_CMD
+
+				; block([0x08, 0x82, 0x27])
+				MOVE 3, R0
+				PUSH R0
+				MOVE INIT_BLOCK3, R0
+				PUSH R0
+				CALL SEND_BLOCK
+				ADD SP, 8, SP
+
+				MOVE 0xF2, R6
+				CALL SEND_CMD
+
+				MOVE 0x00, R6
+				CALL SEND_DATA
+
+				MOVE ILI9341_GAMMASET, R6
+				CALL SEND_CMD
+
+				MOVE 0x01, R6
+				CALL SEND_DATA
+
+				MOVE ILI9341_GMCTRP1, R6
+				CALL SEND_CMD
+
+				; block([0x0f, 0x31, 0x2b, 0x0c, 0x0e, 0x08, 0x4e, 0xf1, 0x37, 0x07, 0x10, 0x03, 0x0e, 0x09, 0x00])
+				MOVE %D 15, R0
+				PUSH R0
+				MOVE INIT_BLOCK4, R0
+				PUSH R0
+				CALL SEND_BLOCK
+				ADD SP, 8, SP
+
+				MOVE ILI9341_GMCTRN1, R6
+				CALL SEND_CMD
+
+				; block([0x00, 0x0e, 0x14, 0x03, 0x11, 0x07, 0x31, 0xc1, 0x48, 0x08, 0x0f, 0x0c, 0x31, 0x36, 0x0f])
+				MOVE %D 15, R0
+				PUSH R0
+				MOVE INIT_BLOCK5, R0
+				PUSH R0
+				CALL SEND_BLOCK
+				ADD SP, 8, SP
+
+				MOVE ILI9341_SLPOUT, R6
+				CALL SEND_CMD
+
+				MOVE 12, R6
+				CALL WAIT
+
+				MOVE ILI9341_DISPON, R6
+				CALL SEND_CMD
+
+
+				; nacrtaj pozadinu
+
+				MOVE P_BACKGROUND_COLOR, R0 ; boja
+				PUSH R0
+				MOVE 0, R0 ; x0
+				PUSH R0
+				MOVE ILI9341_TFTWIDTH, R0 ; x1
+				PUSH R0
+				MOVE 0, R0 ; y0
+				PUSH R0
+				MOVE ILI9341_TFTHEIGHT, R0 ; y1
+				PUSH R0
+
+				CALL PAINT_AREA
+				ADD SP, 14, SP
+
+
+				; inicijaliziraj palice
+
+				MOVE PADDLE_UP, R0 ; 1) adresa
+				PUSH R0
+				MOVE 0, R0 ; 2) y0
+				PUSH R0
+				CALL INIT_PADDLE ; gornja
+				ADD SP, 8, SP
+
+				MOVE PADDLE_DOWN, R0 ; 1) adresa
+				PUSH R0
+				MOVE ILI9341_TFTHEIGHT, R0 ; 2) y0 = lcd_height - paddle_height
+				SUB R0, P_PADDLE_HEIGHT, R0
+				PUSH R0
+				CALL INIT_PADDLE ; donja
+				ADD SP, 8, SP
+
+
+				; nacrtaj palice
+
+				MOVE PADDLE_UP, R0 ; adresa
+				PUSH R0
+				MOVE 0, R0
+				PUSH R0
+				CALL DRAW_REC
+				ADD SP, 4, SP
+
+				MOVE PADDLE_DOWN, R0 ; adresa
+				PUSH R0
+				MOVE 0, R0
+				PUSH R0
+				CALL DRAW_REC
+				ADD SP, 4, SP
+
+
+GAME_LOOP		MOVE PADDLE_UP, R0 ; 1) adresa
+				PUSH R0
+				MOVE 0, R0 ; 2) pomak
+				PUSH R0
+				CALL UPDATE_PADDLE
+				ADD SP, 8, SP
+
+				MOVE PADDLE_DOWN, R0 ; 1) adresa
+				PUSH R0
+				MOVE 2, R0 ; 2) pomak
+				PUSH R0
+				CALL UPDATE_PADDLE
+				ADD SP, 8, SP
+
+				MOVE 10, R6
+				CALL WAIT
+				JR GAME_LOOP
+
+				HALT
+
+
+				; init blocks
+INIT_BLOCK1		DB 3E, 28
+INIT_BLOCK2		DB 00, 18
+INIT_BLOCK3		DB 08, 82, 27
+INIT_BLOCK4		DB 0F, 31, 2b, 0c, 0e, 08, 4e, 0f1, 37, 07, 10, 03, 0e, 09, 00
+INIT_BLOCK5		DB 00, 0e, 14, 03, 11, 07, 31, 0c1, 48, 08, 0f, 0c, 31, 36, 0f
+
+
+				; rectangle objects (kao strukture)
+				; po dva byta za: x0, y0, width, height, boja
+				; 				  0   2   4      6       8
+PADDLE_UP		DS %D 10
+PADDLE_DOWN		DS %D 10
+TEST_REC		DH %D 15, %D 50, %D 20, %D 100, 0E7E0
+
+
+INIT_REC		; inicijaliziraj rec strukturu u memoriji
+				; preko stoga prima:
+				; 	1) adresa strukture
+				; 	2-6) x0, y0, width, height, boja
+
+				PUSH R0
+				PUSH R1
+
+				LOAD R1, (SP+20) ; adresa
+
+				LOAD R0, (SP+0C) ; boja
+				STOREH R0, (R1+8)
+
+				LOAD R0, (SP+10) ; height
+				STOREH R0, (R1+6)
+
+				LOAD R0, (SP+14) ; width
+				STOREH R0, (R1+4)
+
+				LOAD R0, (SP+18) ; y0
+				STOREH R0, (R1+2)
+
+				LOAD R0, (SP+1C) ; x0
+				STOREH R0, (R1)
+
+				POP R1
+				POP R0
+
+				RET
+
+
+DRAW_REC		; crta rec strukturu u cijelosti
+				; prima stogom 
+				; 	1) adresu strukture
+				;	2) 0 - crtaj obicno, 1 - crtaj bojom pozadine
+
+				; ovo je jako sporo zbog brzine FRISCa i stalnog pozivanja potprograma
+				; zato se javlja flicker kod crtanja
+				; potencijalna rjesenja:
+				; 	1) direktinji program za crtanje koji ne koristi potprograme,
+				; 	   pogotovo one koji se stalno pozivaju (SEND_HW, SPI_SEND, SEND_DATA);
+				;	   time se gubi na citljivosti
+				;	2) u UPDATE_REC, racunanje razlike izmedju starog i novog pravokutnika,
+				; 	   sto u opcenitom slucaju daje 4 malena pravokutnika preko kojih treba pisati, umjesto
+				; 	   dva velika; npr. za paddle bi se brisao i pisao po jedan 5x10 pravokutnik s kraja i s pocetka
+
+				PUSH R0
+				PUSH R1
+				PUSH R2
+
+				LOAD R1, (SP+14) ; adresa
+				LOAD R2, (SP+10) ; zastavica boje
+
+				CMP R2, 1 ; provjeri zastavicu
+				JR_EQ DRAW_REC_ERASE
+
+				LOADH R0, (R1+8) ; 1) boja
+				PUSH R0
+				JR DRAW_REC_CONT
+
+DRAW_REC_ERASE	MOVE P_BACKGROUND_COLOR, R0 ; ako je zastavica = 1, brisi
+				PUSH R0 ; 1) boja
+
+DRAW_REC_CONT	LOADH R0, (R1) ; 2) x0
+				PUSH R0
+
+				LOADH R2, (R1+4) ; width
+				ADD R0, R2, R0
+				PUSH R0 ; 3) x1
+
+				LOADH R0, (R1+2) ; 4) y0
+				PUSH R0
+
+				LOADH R2, (R1+6) ; height
+				ADD R0, R2, R0
+				PUSH R0 ; 5) y1
+
+				CALL PAINT_AREA
+				ADD SP, 14, SP
+
+				POP R2
+				POP R1
+				POP R0
+
+				RET
+
+
+UPDATE_REC		; pomakni rec strukturu na ekranu i u memoriji
+				; preko stoga prima:
+				; 	1) adresu rec strukture
+				; 	2) delta x, delta y: vektor promjene pozicije
+
+				PUSH R0
+				PUSH R1
+				PUSH R2
+				PUSH R3
+				PUSH R4
+
+				LOAD R0, (SP+20) ; adresa
+
+				; obrisi postojeci rec s bojom pozadine
+				PUSH R0
+				MOVE 1, R1 ; odaberi brisanje
+				PUSH R1
+				CALL DRAW_REC
+				ADD SP, 8, SP
+
+				; inkrementiraj poziciju u memoriji
+				LOADH R1, (R0) ; x0 = x0 + delta x
+				LOADH R2, (SP+1C) ; delta x
+				ADD R1, R2, R1
+				STOREH R1, (R0)
+
+				LOADH R1, (R0+2) ; y0 = y0 + delta y
+				LOADH R2, (SP+18) ; delta y
+				ADD R1, R2, R1
+				STOREH R1, (R0+2)
+
+				; nacrtaj novi rec
+				PUSH R0
+				MOVE 0, R1
+				PUSH R1
+				CALL DRAW_REC
+				ADD SP, 8, SP
+
+				POP R4				
+				POP R3
+				POP R2
+				POP R1
+				POP R0
+
+				RET
+
+
+INIT_PADDLE		; inicijalizacija specificna za palice
+				; preko stoga prima
+				;	1) adresu palice
+				; 	2) y gornjeg ruba
+
+				PUSH R0
+				PUSH R1
+				PUSH R2
+
+				LOAD R1, (SP+14) ; adresa
+				LOAD R2, (SP+10) ; y0
+
+				PUSH R1 ; 1) adresa
+
+				MOVE ILI9341_TFTWIDTH, R0 ; 2) x0 = lcd_width/2 - paddle_width/2
+				SUB R0, P_PADDLE_WIDTH, R0
+				SHR R0, 1, R0 ; r0 /= 2
+				PUSH R0
+
+				PUSH R2 ; 3) y0
+
+				MOVE P_PADDLE_WIDTH, R0 ; 4) width
+				PUSH R0
+				MOVE P_PADDLE_HEIGHT, R0 ; 5) height
+				PUSH R0
+
+				MOVE P_PADDLE_COLOR, R0 ; 6) boja
+				PUSH R0
+
+				CALL INIT_REC
+				ADD SP, %D 24, SP
+
+				POP R2
+				POP R1
+				POP R0
+
+				RET
+
+
+UPDATE_PADDLE	; pomakni palicu na pritisak gumba
+				; 	1) adresa rec-a palice
+				;	2) pomak za btn (salje se stanje gumbova, pomaknuto za 2 za jednu od palica)
+
+				PUSH R0
+				PUSH R1
+				PUSH R2
+				PUSH R3
+
+				LOAD R0, (GPIO1_BUTTONS)
+				LOAD R1, (SP+14) ; pomak
+				SHR R0, R1, R0
+				AND R0, %B 11, R0 ; zanimaju nas samo dva gumba
+
+				CMP R0, 0 ; je li nesto pretisnuto?
+				JR_NE UPD_DIR_TEST ; ako jest, provjeri u kojem smjeru
+
+				JR UPD_END ; ako nema pritiska, zavrsi
+
+UPD_DIR_TEST	CMP R0, %B 10 ; ako je prema lijevo
+				JR_EQ UPD_GOING_LEFT
+
+				MOVE 5, R2 ; dx = +5, going right
+				JR UPD_CONT
+
+UPD_GOING_LEFT	MOVE -5, R2 ; dx = -5, going left
+
+UPD_CONT		; pomakni rec uz taj dx
+				LOAD R0, (SP+18) ; adresa
+				PUSH R0
+				PUSH R2 ; dx
+				MOVE 0, R0
+				PUSH R0 ; dy = 0
+				CALL UPDATE_REC
+				ADD SP, 0C, SP
+
+UPD_END			POP R3
+				POP R2
+				POP R1
+				POP R0
+				
+				RET
+
+
+MULTIPLY		; mnozi argumente sa stacka
+				; ne radi za mnozenje s nulom!
+				; vraca rezultat na r0
+
+				PUSH R1
+				PUSH R2
+
+				LOAD R1, (SP+0C) ; prvi faktor
+				LOAD R2, (SP+10) ; drugi faktor
+				MOVE 0, R0 ; rezultat
+
+MULTIPLY_LP		ADD R0, R2, R0
+				SUB R1, 1, R1
+				JR_NZ MULTIPLY_LP
+
+				POP R2
+				POP R1
+
+				RET
+
+
+PAINT_AREA 		; oboja pravokutnik
+				; prima stogom redom
+				;	boja, x0, x1, y0, y1
+
+				PUSH R0
+				PUSH R1
+				PUSH R2
+				PUSH R3
+				PUSH R6
+
+				LOAD R0, (SP+24) ; x0
+				LOAD R1, (SP+20) ; x1
+				LOAD R2, (SP+1C) ; y0
+				LOAD R3, (SP+18) ; y1
+
+				PUSH R0 ; set frame
+				PUSH R1
+				PUSH R2
+				PUSH R3
+				CALL SET_FRAME
+				ADD SP, %D 16, SP
+
+				; izracunaj broj piksela
+				SUB R1, R0, R0
+				SUB R3, R2, R1
+				PUSH R0
+				PUSH R1
+				CALL MULTIPLY ; r0 = broj piksela 
+				ADD SP, 8, SP
+
+				; popuni pikselima
+				MOVE ILI9341_RAMWR, R6
+				CALL SEND_CMD
+				LOAD R6, (SP+28) ; boja
+PAINT_AREA_LP	CALL SEND_HW
+				SUB R0, 1, R0
+				JR_NZ PAINT_AREA_LP
+
+				POP R6
+				POP R3
+				POP R2
+				POP R1
+				POP R0
+
+				RET
+
+
+SPI_SEND		; opcenito slanje bez postavljanja dc
+				; salje R6
+
+				PUSH R6
+				PUSH R5
+
+				STOREB R6, (SPI_DTR) ; postavi komandu
+				
+				LOAD R5, (SPI_CR) ; omoguci transakciju
+				AND R5, %B 011111111, R5 ; master transaction inhibit bit u 0
+				STORE R5, (SPI_CR)
+
+				MOVE 10, R6 ; cekaj da se podatak prenese
+							; trebalo bi provjeravati statusni registar u petlji, ali to ne funkcionira
+				CALL QUICK_WAIT
+
+				LOAD R5, (SPI_CR) ; onemoguci transakciju
+				OR R5, %B 100000000, R5 ; master transaction inhibit bit u 1
+				STORE R5, (SPI_CR)
+
+				POP R5
+				POP R6
+
+				RET
+
+
+SEND_DATA 		; salje R6 na SPI
+				PUSH R5
+
+				MOVE 1, R5 ; postavi pisanje podatka
+				STOREB R5, (GPIO2_OUTPUT)
+				CALL SPI_SEND
+
+				POP R5
+				RET
+
+
+SEND_HW			; salje polurijec R6 na SPI
+				; big endian
+
+				PUSH R5
+
+				MOVE 1, R5 ; postavi pisanje podatka
+				STOREB R5, (GPIO2_OUTPUT)
+
+				ROTR R6, 8, R6 ; gornja polovica
+				CALL SPI_SEND
+				ROTL R6, 8, R6 ; donja polovica
+				CALL SPI_SEND
+
+				POP R5
+
+				RET
+
+
+SEND_BLOCK		; prima stogom
+				; 	1) broj elemenata
+				; 	2) adresu pocetnog
+				; salje elemente na SPI
+
+				PUSH R0 ; sacuvaj
+				PUSH R1
+				PUSH R2
+				PUSH R6
+
+				MOVE 1, R0 ; postavi pisanje podatka
+				STOREB R0, (GPIO2_OUTPUT)
+
+				LOAD R0, (SP+18) ; brojac
+				LOAD R1, (SP+14) ; adresa
+
+SEND_BLOCK_LP   LOADB R6, (R1)
+				CALL SPI_SEND
+				ADD R1, 1, R1
+				SUB R0, 1, R0
+				JR_NZ SEND_BLOCK_LP
+
+				POP R6
+				POP R2
+				POP R1
+				POP R0
+
+				RET
+
+
+SEND_CMD		; salje R6 na SPI
+				PUSH R5
+
+				MOVE 0, R5 ; postavi pisanje komande
+				STOREB R5, (GPIO2_OUTPUT)
+				CALL SPI_SEND
+
+				POP R5
+				RET
+
+
+WAIT			; ceka R6 milisekundi
+				PUSH R6
+				PUSH R5
+				
+WAIT_LP_OUT		MOVE 1000, R5 ; cekaj 1 ms
+WAIT_LP_IN		SUB R5, 1, R5
+				JR_NZ WAIT_LP_IN
+
+				SUB R6, 1, R6
+				JR_NZ WAIT_LP_OUT
+
+				POP R5
+				POP R6
+
+				RET
+
+QUICK_WAIT		; ceka R6 ciklusa
+				; invalidira R6
+				SUB R6, 1, R6
+				JR_NZ QUICK_WAIT
+				RET
+
+
+SET_FRAME 		; postavi okvir za crtanje
+				; stogom se prenose redom:
+				;	x0, x1, y0, y1
+				; redovi i stupci su 0-indeksirani
+				; skup je [x0, x1> x [y0, y1> (kartezijev produkt)
+				; (za sliku 10x20 u (0, 5) salje se (0, 9, 5, 5+19))
+
+				PUSH R6
+
+				MOVE ILI9341_CASET, R6
+				CALL SEND_CMD
+
+				LOAD R6, (SP+14) ; x0
+				CALL SEND_HW
+				LOAD R6, (SP+10) ; x1
+				SUB R6, 1, R6 ; x1-- zatvarajuce granice su exclusive
+				CALL SEND_HW
+
+				MOVE ILI9341_PASET, R6
+				CALL SEND_CMD
+
+				LOAD R6, (SP+0C) ; y0
+				CALL SEND_HW
+				LOAD R6, (SP+8) ; y1
+				SUB R6, 1, R6
+				CALL SEND_HW
+
+				POP R6
+
+				RET
+
+
+				; slika za testiranje boje
+				; 30x47
+				; ispisati pomocu SET_FRAME i SEND_BLOCK
+BITMAP			DB 79,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,80,79,80,79,80,79,80,79,80,79,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,81,81,81,81,80,81,80,81,80,81,80,81,80,81,80,81,81,81,81,81,81,81,80,81,80,79,0a0,79,0a0,79,80,79,80,79,80,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,81,80,81,80,81,80,81,80,81,81,81,81,81,81,81,81,81,81,81,81,81,81,81,80,81,80,81,81,81,81,81,81,81,81,81,81,81,80,79,80,79,0a0,79,0a0,79,80,79,80,79,80,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0c0,79,0c0,79,0a0,79,0a0,79,80,79,80,79,80,79,80,79,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,79,0a0,79,0a0,79,0c0,79,0c0,79,0c0,79,0c0,79,0a0,79,0a0,79,0c0,79,0c0,79,0c0,79,0c0,79,0c0,79,0c0,79,0c0,79,0c0,79,0c0,79,0a0,79,0a0,81,80,79,80,79,80,79,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,81,80,81,81,81,61,81,61,81,61,81,61,81,61,81,61,81,61,81,61,81,61,81,61,81,61,81,61,81,61,81,61,81,61,81,61,81,80,79,0a0,79,0a0,79,80,79,80,79,80,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,81,80,81,80,81,61,89,42,89,42,89,42,89,42,89,42,89,42,89,42,89,42,89,42,89,42,89,42,89,42,89,42,89,42,89,42,81,61,81,80,79,0a0,79,0a0,79,80,79,80,79,80,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,80,79,80,79,80,79,80,79,80,79,80,81,80,79,0a0,79,0c0,71,0e0,6a,0,6a,0,6a,0,6a,0,6a,0,6a,0,6a,0,6a,0,6a,0,6a,0,6a,0,6a,0,6a,0,6a,0,6a,20,71,0e0,79,0a0,81,80,81,80,79,0a0,79,0a0,81,80,81,60,81,60,81,60,81,60,81,61,81,61,81,61,81,61,81,61,81,60,81,60,81,61,81,61,81,60,81,80,79,80,79,80,79,80,79,80,79,0a0,81,80,81,80,79,0a0,6a,20,0de,0e8,0cf,64,0c7,83,0c7,83,0cf,64,0cf,64,0cf,83,0c7,83,0cf,64,0cf,64,0c7,83,0c7,83,0cf,64,0cf,64,0c7,0a2,0c7,0a2,0d7,26,71,0e0,81,61,81,61,79,0c0,79,0a0,81,81,0fc,0e,0fc,2e,0fc,2e,0fc,0f,0fc,0f,0fc,2e,0fc,2e,0fc,0f,0fc,0f,0fc,2e,0f4,2e,0fc,0f,0fc,0f,0f4,2e,81,60,79,80,81,80,81,80,79,0a0,79,0a0,81,80,81,80,79,0c0,62,60,0cf,64,0b7,0e0,0af,0e0,0af,0e0,0af,0e0,0af,0e0,0af,0e0,0af,0e0,0af,0e0,0af,0e0,0af,0e0,0af,0e0,0b7,0e0,0b7,0e0,0a7,0e0,0a7,0e0,0bf,0a2,6a,20,89,42,81,61,79,0c0,79,0c0,81,61,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0d0,0fb,0d0,0fc,0f,89,61,79,80,81,80,81,80,79,0a0,79,0a0,81,80,81,80,79,0c0,62,60,0cf,64,0b7,0e0,0af,0e0,0af,0e0,0b7,0e0,0b7,0e0,0af,0e0,0af,0e0,0b7,0e0,0b7,0e0,0af,0e0,0af,0e0,0b7,0e0,0b7,0e0,0af,0e0,0a7,0e0,0c7,0a2,6a,20,89,42,81,61,79,0c0,79,0c0,81,61,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0d0,0fc,0f,89,61,79,80,81,80,81,80,79,0a0,79,0a0,81,80,81,80,79,0a0,62,40,0d7,26,0c7,0a2,0bf,0e0,0bf,0e0,0bf,0c1,0bf,0c1,0bf,0c1,0bf,0e0,0bf,0c1,0bf,0c1,0bf,0e0,0bf,0e0,0bf,0c1,0bf,0a2,0b7,0e0,0b7,0e0,0cf,64,6a,0,89,42,81,61,79,0c0,79,0c0,81,61,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fb,0ef,0fb,0ef,0fc,2e,81,61,79,80,79,80,81,80,79,80,79,0a0,81,80,81,80,79,0c0,62,40,0d7,26,0bf,0a2,0b7,0e0,0bf,0e0,0bf,0c1,0bf,0c1,0bf,0c0,0bf,0e0,0bf,0c1,0bf,0c1,0b7,0e0,0b7,0e0,0bf,0c1,0bf,0c1,0b7,0e0,0b7,0e0,0cf,64,6a,0,89,42,81,61,79,0c0,79,0c0,81,61,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fb,0ef,0fb,0ef,0fc,2e,81,61,79,80,81,80,81,80,79,0a0,79,0a0,81,80,81,80,79,0c0,62,40,0cf,45,0bf,0e0,0af,0e0,0b7,0e0,0b7,0e0,0b7,0e0,0b7,0e0,0b7,0e0,0b7,0e0,0b7,0e0,0af,0e0,0af,0e0,0b7,0e0,0b7,0e0,0af,0e0,0af,0e0,0c7,82,6a,0,89,42,81,61,79,0c0,79,0c0,81,61,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0ef,0fb,0ef,0fb,0f0,0fb,0f0,0fc,0f,81,61,79,80,81,80,81,80,79,0a0,79,0a0,81,80,81,80,79,0c0,62,40,0cf,45,0bf,0e0,0af,0e0,0b7,0e0,0b7,0e0,0b7,0e0,0b7,0e0,0b7,0e0,0b7,0e0,0b7,0e0,0af,0e0,0af,0e0,0b7,0e0,0b7,0e0,0af,0e0,0af,0e0,0c7,82,6a,0,89,42,81,61,79,0c0,79,0c0,81,61,0fb,0ef,0fb,0ef,0fb,0ef,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0ef,0fb,0f0,0fb,0f0,0fc,0f,81,61,79,80,81,80,81,80,79,0a0,79,0a0,81,80,81,80,79,0c0,62,40,0d7,26,0bf,0c2,0b7,0e0,0bf,0e0,0bf,0c0,0bf,0c0,0b7,0e0,0b7,0e0,0bf,0c1,0bf,0c1,0b7,0e0,0b7,0e0,0bf,0c1,0bf,0c1,0b7,0e0,0b7,0e0,0cf,64,6a,0,89,42,81,61,79,0c0,79,0c0,81,61,0fb,0ef,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fb,0ef,0fb,0f0,0fc,0f,81,61,79,80,81,80,81,80,79,0a0,79,0a0,81,80,81,80,79,0c0,5a,60,0c7,83,0af,0e0,0a7,0e0,0a7,0e0,0af,0e0,0af,0e0,0a7,0e0,0af,0e0,0af,0e0,0af,0e0,0a7,0e0,0a7,0e0,0af,0e0,0af,0e0,0a7,0e0,9f,0e0,0bf,0c0,6a,20,91,22,89,41,79,0c0,79,0c0,89,60,0fb,0ef,0fb,0ef,0fb,0ef,0fb,0ef,0fb,0ef,0fb,0ef,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fb,0f0,0fc,0f,81,61,79,80,79,80,81,80,79,80,79,80,81,80,81,80,79,0a0,6a,20,0e6,0e8,0d7,45,0cf,64,0cf,64,0cf,64,0cf,65,0cf,65,0c7,65,0cf,65,0cf,65,0c7,84,0c7,84,0cf,45,0cf,46,0c7,84,0c7,84,0d7,8,69,0e0,81,62,81,81,71,0c0,71,0c0,79,81,0fc,10,0f4,10,0f4,10,0fc,10,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fc,0f,0fb,0ef,0fc,2e,81,61,79,80,79,80,81,80,79,80,79,80,79,80,79,80,79,0a0,79,0a0,71,0c0,71,0e0,71,0e0,71,0e0,69,0e0,6a,0,69,0e0,6a,0,6a,0,6a,0,6a,0,6a,0,6a,0,6a,0,6a,0,6a,0,69,0e0,79,0a0,79,81,79,0a1,79,0a0,79,0a0,79,0a1,0f4,2f,0ec,2f,0ec,4f,0f4,2f,0f4,2e,0f4,2e,0f4,2e,0f4,2e,0f4,2e,0f4,2e,0f4,2e,0f4,2e,0f4,2e,0f4,4e,81,60,79,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,81,80,81,81,81,61,81,61,81,61,81,61,81,61,89,61,89,60,89,60,89,60,89,60,89,40,89,60,89,60,89,40,89,41,89,60,81,60,81,80,81,80,81,80,81,80,81,80,91,40,91,40,91,40,89,40,89,41,89,61,89,61,89,61,89,41,89,61,89,61,89,41,89,41,81,61,81,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,81,80,81,80,81,81,81,81,81,80,81,60,81,60,89,60,89,60,89,60,89,60,89,60,89,60,89,60,89,60,89,60,89,60,89,60,81,80,81,80,81,80,81,80,81,80,89,60,89,60,89,60,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,81,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,71,0a0,71,0c0,69,0c1,69,0c1,69,0c1,69,0c1,69,0c1,69,0c1,69,0c1,69,0c1,69,0c1,69,0c1,69,0c2,71,0a2,71,0a2,69,0c2,71,0c2,71,0a2,71,0a1,69,0c2,69,0c2,71,0a1,79,0a0,81,80,79,80,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,79,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,79,0a0,79,80,79,80,79,0a0,79,0a0,79,0a0,79,0a0,79,0a0,69,0c2,18,0,8,0,8,0,8,0,8,0,8,0,8,0,8,0,8,0,8,0,8,0,8,0,8,0,8,0,8,0,8,0,8,0,10,0,0,0,0,0,10,0,71,0a1,81,80,81,80,79,0a0,79,80,81,80,79,80,79,0a0,79,0a0,79,80,81,80,79,80,79,80,79,80,79,80,79,80,79,0a0,79,0a0,79,80,81,80,79,80,79,80,81,80,81,80,79,0a1,69,0c3,10,0,0,1,0,1,0,1,0,1,0,1,0,1,0,0,0,1,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,22,8,0,71,0a2,81,80,81,80,79,0a0,79,80,81,80,81,80,79,80,79,80,81,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,79,0a0,79,80,81,80,79,80,79,80,81,80,81,80,79,0a1,69,0c3,10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,21,8,0,71,0a1,81,80,81,80,79,0a0,79,80,81,80,81,80,79,80,79,80,81,80,81,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,79,0a0,79,0a0,79,0a0,81,80,79,0a0,69,0c2,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,0,71,0a1,81,80,81,80,79,0a0,79,0a0,81,80,79,80,79,80,79,80,81,80,79,80,79,80,79,80,79,80,81,80,81,80,79,80,79,80,79,80,81,0a0,79,0a0,79,0a0,79,80,81,80,79,0a0,69,0c2,10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,8,0,71,0a1,81,80,81,80,79,0a0,79,0a0,81,80,81,80,79,80,79,80,81,80,81,80,79,80,79,80,79,80,81,80,81,80,79,80,79,80,79,80,81,80,79,80,79,80,81,80,81,80,79,81,69,0c3,18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8,0,0,0,0,0,10,0,71,0a1,81,80,81,80,79,0a0,79,0a0,81,80,81,80,79,80,79,80,81,80,81,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,81,80,79,80,79,80,79,80,81,80,81,80,79,80,71,0a2,20,0,10,0,10,0,10,0,10,0,10,0,10,0,10,0,10,0,10,0,10,0,10,0,10,0,10,0,10,0,10,0,10,0,18,0,10,0,8,0,18,0,79,0a1,81,80,81,80,79,80,79,80,81,80,81,80,79,80,79,80,81,80,81,80,81,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,79,80,79,0a0,79,0a0,79,0a0,81,0a0,79,0a0,71,0a1,71,0a2,61,0c3,61,0c3,61,0c3,61,0c3,61,0c3,61,0c3,61,0c3,61,0c3,61,0c3,61,0c3,61,0c3,61,0c3,69,0c3,69,0c3,69,0c3,61,0c3,69,0c3,61,0c3,61,0c3,69,0c2,79,0a0,81,80,81,80,79,80,79,80,81,80,81,80,79,80,79,80,79,80,79,80
