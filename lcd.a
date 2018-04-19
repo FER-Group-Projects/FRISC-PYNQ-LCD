@@ -97,6 +97,9 @@ INTC_MI_MER		EQU 0FFF8901C	; Master enable register
 MAIN			HALT
 
 
+												; Znakovi kopirani s https://xantorohara.github.io/led-matrix-editor/
+												;
+												;
 				ORG 4000						; Prvo idu slova, onda razmak i konačno znamenke u memoriji
 ZNAKOVI			DB %B 00000000					; Svaki znak zauzima po 8 bajta
 				DB %B 00111100
