@@ -7,6 +7,7 @@ Zadatak: Zadatak 8 - Ispisivanje slova i znamenki
 
 Oprema:
 - LCD display
+
 Zadatak je napraviti potprogram za ispisivanje slova i znamenki na LCD zaslon. Potprogram
 preko stoga prima više parametara:
 1. Pozicija X
