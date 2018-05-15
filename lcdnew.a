@@ -124,7 +124,7 @@ P_BACKGROUND_COLOR	EQU 0 ; crna
 
 				ORG 0
 				
-MAIN			MOVE 2000, SP
+MAIN			MOVE 10000, SP
 
 
 				; signaliziraj pocetak
@@ -275,8 +275,6 @@ MAIN			MOVE 2000, SP
 				CALL PAINT_AREA
 				ADD SP, 14, SP
 
-				; nacrtaj pozadinu
-
 				LOAD R0, (BOJE)
 				PUSH R0
 				MOVE 0, R0 ; x0
@@ -319,17 +317,20 @@ ISPISI_ZNAK		PUSH R0
 LP_REDAK_ZK		LOADB R5, (R6)
 				SHL R5, 18, R5 				; Pomak za 24 mjesta
 
-				MOVE 8, R4
+				MOVE 8, R4					; Unutarnji indeks
 
 LP_STUPAC_ZK	SHL R5, 1, R5
+
 				JR_NC BIT_POZADINA
 
-				LOAD R0, (BOJA_ZNK_PNT)
+BIT_ZNAK		LOAD R0, (BOJA_ZNK_PNT)
 				JR ZNK_PNT_AREA
 
 BIT_POZADINA	LOAD R0, (BOJA_BG_PNT)
 				
-ZNK_PNT_AREA	PUSH R0
+ZNK_PNT_AREA	LOAD R0, (R0+BOJE)
+
+				PUSH R0
 				PUSH R1
 
 				LOAD R0, (SCALE)
@@ -345,6 +346,20 @@ ZNK_PNT_AREA	PUSH R0
 				CALL PAINT_AREA
 				ADD SP, 14, SP
 
+				LOAD R0, (SCALE)
+				ADD R1, R0, R1
+
+				SUB R4, 1, R4
+				JR_NZ LP_STUPAC_ZK
+
+				LOAD R1, (POZICIJA_X)
+				LOAD R0, (SCALE)
+				ADD R2, R0, R2
+				ADD R6, 1, R6
+
+				SUB R3, 1, R3
+				JR_NZ LP_REDAK_ZK
+
 				POP R6
 				POP R5
 				POP R4
@@ -354,293 +369,12 @@ ZNK_PNT_AREA	PUSH R0
 				POP R0
 				RET
 
-				; inicijaliziraj palice
-
-				MOVE PADDLE_UP, R0 ; 1) adresa
-				PUSH R0
-				MOVE 0, R0 ; 2) y0
-				PUSH R0
-				CALL INIT_PADDLE ; gornja
-				ADD SP, 8, SP
-
-				MOVE PADDLE_DOWN, R0 ; 1) adresa
-				PUSH R0
-				MOVE ILI9341_TFTHEIGHT, R0 ; 2) y0 = lcd_height - paddle_height
-				SUB R0, P_PADDLE_HEIGHT, R0
-				PUSH R0
-				CALL INIT_PADDLE ; donja
-				ADD SP, 8, SP
-
-
-				; nacrtaj palice
-
-				MOVE PADDLE_UP, R0 ; adresa
-				PUSH R0
-				MOVE 0, R0
-				PUSH R0
-				CALL DRAW_REC
-				ADD SP, 4, SP
-
-				MOVE PADDLE_DOWN, R0 ; adresa
-				PUSH R0
-				MOVE 0, R0
-				PUSH R0
-				CALL DRAW_REC
-				ADD SP, 4, SP
-
-
-GAME_LOOP		MOVE PADDLE_UP, R0 ; 1) adresa
-				PUSH R0
-				MOVE 0, R0 ; 2) pomak
-				PUSH R0
-				CALL UPDATE_PADDLE
-				ADD SP, 8, SP
-
-				MOVE PADDLE_DOWN, R0 ; 1) adresa
-				PUSH R0
-				MOVE 2, R0 ; 2) pomak
-				PUSH R0
-				CALL UPDATE_PADDLE
-				ADD SP, 8, SP
-
-				MOVE 10, R6
-				CALL WAIT
-				JR GAME_LOOP
-
-				HALT
-
-
 				; init blocks
 INIT_BLOCK1		DB 3E, 28
 INIT_BLOCK2		DB 00, 18
 INIT_BLOCK3		DB 08, 82, 27
 INIT_BLOCK4		DB 0F, 31, 2b, 0c, 0e, 08, 4e, 0f1, 37, 07, 10, 03, 0e, 09, 00
 INIT_BLOCK5		DB 00, 0e, 14, 03, 11, 07, 31, 0c1, 48, 08, 0f, 0c, 31, 36, 0f
-
-
-				; rectangle objects (kao strukture)
-				; po dva byta za: x0, y0, width, height, boja
-				; 				  0   2   4      6       8
-PADDLE_UP		DS %D 10
-PADDLE_DOWN		DS %D 10
-TEST_REC		DH %D 15, %D 50, %D 20, %D 100, 0E7E0
-
-
-INIT_REC		; inicijaliziraj rec strukturu u memoriji
-				; preko stoga prima:
-				; 	1) adresa strukture
-				; 	2-6) x0, y0, width, height, boja
-
-				PUSH R0
-				PUSH R1
-
-				LOAD R1, (SP+20) ; adresa
-
-				LOAD R0, (SP+0C) ; boja
-				STOREH R0, (R1+8)
-
-				LOAD R0, (SP+10) ; height
-				STOREH R0, (R1+6)
-
-				LOAD R0, (SP+14) ; width
-				STOREH R0, (R1+4)
-
-				LOAD R0, (SP+18) ; y0
-				STOREH R0, (R1+2)
-
-				LOAD R0, (SP+1C) ; x0
-				STOREH R0, (R1)
-
-				POP R1
-				POP R0
-
-				RET
-
-
-DRAW_REC		; crta rec strukturu u cijelosti
-				; prima stogom 
-				; 	1) adresu strukture
-				;	2) 0 - crtaj obicno, 1 - crtaj bojom pozadine
-
-				; ovo je jako sporo zbog brzine FRISCa i stalnog pozivanja potprograma
-				; zato se javlja flicker kod crtanja
-				; potencijalna rjesenja:
-				; 	1) direktinji program za crtanje koji ne koristi potprograme,
-				; 	   pogotovo one koji se stalno pozivaju (SEND_HW, SPI_SEND, SEND_DATA);
-				;	   time se gubi na citljivosti
-				;	2) u UPDATE_REC, racunanje razlike izmedju starog i novog pravokutnika,
-				; 	   sto u opcenitom slucaju daje 4 malena pravokutnika preko kojih treba pisati, umjesto
-				; 	   dva velika; npr. za paddle bi se brisao i pisao po jedan 5x10 pravokutnik s kraja i s pocetka
-
-				PUSH R0
-				PUSH R1
-				PUSH R2
-
-				LOAD R1, (SP+14) ; adresa
-				LOAD R2, (SP+10) ; zastavica boje
-
-				CMP R2, 1 ; provjeri zastavicu
-				JR_EQ DRAW_REC_ERASE
-
-				LOADH R0, (R1+8) ; 1) boja
-				PUSH R0
-				JR DRAW_REC_CONT
-
-DRAW_REC_ERASE	MOVE P_BACKGROUND_COLOR, R0 ; ako je zastavica = 1, brisi
-				PUSH R0 ; 1) boja
-
-DRAW_REC_CONT	LOADH R0, (R1) ; 2) x0
-				PUSH R0
-
-				LOADH R2, (R1+4) ; width
-				ADD R0, R2, R0
-				PUSH R0 ; 3) x1
-
-				LOADH R0, (R1+2) ; 4) y0
-				PUSH R0
-
-				LOADH R2, (R1+6) ; height
-				ADD R0, R2, R0
-				PUSH R0 ; 5) y1
-
-				CALL PAINT_AREA
-				ADD SP, 14, SP
-
-				POP R2
-				POP R1
-				POP R0
-
-				RET
-
-
-UPDATE_REC		; pomakni rec strukturu na ekranu i u memoriji
-				; preko stoga prima:
-				; 	1) adresu rec strukture
-				; 	2) delta x, delta y: vektor promjene pozicije
-
-				PUSH R0
-				PUSH R1
-				PUSH R2
-				PUSH R3
-				PUSH R4
-
-				LOAD R0, (SP+20) ; adresa
-
-				; obrisi postojeci rec s bojom pozadine
-				PUSH R0
-				MOVE 1, R1 ; odaberi brisanje
-				PUSH R1
-				CALL DRAW_REC
-				ADD SP, 8, SP
-
-				; inkrementiraj poziciju u memoriji
-				LOADH R1, (R0) ; x0 = x0 + delta x
-				LOADH R2, (SP+1C) ; delta x
-				ADD R1, R2, R1
-				STOREH R1, (R0)
-
-				LOADH R1, (R0+2) ; y0 = y0 + delta y
-				LOADH R2, (SP+18) ; delta y
-				ADD R1, R2, R1
-				STOREH R1, (R0+2)
-
-				; nacrtaj novi rec
-				PUSH R0
-				MOVE 0, R1
-				PUSH R1
-				CALL DRAW_REC
-				ADD SP, 8, SP
-
-				POP R4				
-				POP R3
-				POP R2
-				POP R1
-				POP R0
-
-				RET
-
-
-INIT_PADDLE		; inicijalizacija specificna za palice
-				; preko stoga prima
-				;	1) adresu palice
-				; 	2) y gornjeg ruba
-
-				PUSH R0
-				PUSH R1
-				PUSH R2
-
-				LOAD R1, (SP+14) ; adresa
-				LOAD R2, (SP+10) ; y0
-
-				PUSH R1 ; 1) adresa
-
-				MOVE ILI9341_TFTWIDTH, R0 ; 2) x0 = lcd_width/2 - paddle_width/2
-				SUB R0, P_PADDLE_WIDTH, R0
-				SHR R0, 1, R0 ; r0 /= 2
-				PUSH R0
-
-				PUSH R2 ; 3) y0
-
-				MOVE P_PADDLE_WIDTH, R0 ; 4) width
-				PUSH R0
-				MOVE P_PADDLE_HEIGHT, R0 ; 5) height
-				PUSH R0
-
-				MOVE P_PADDLE_COLOR, R0 ; 6) boja
-				PUSH R0
-
-				CALL INIT_REC
-				ADD SP, %D 24, SP
-
-				POP R2
-				POP R1
-				POP R0
-
-				RET
-
-
-UPDATE_PADDLE	; pomakni palicu na pritisak gumba
-				; 	1) adresa rec-a palice
-				;	2) pomak za btn (salje se stanje gumbova, pomaknuto za 2 za jednu od palica)
-
-				PUSH R0
-				PUSH R1
-				PUSH R2
-				PUSH R3
-
-				LOAD R0, (GPIO1_BUTTONS)
-				LOAD R1, (SP+14) ; pomak
-				SHR R0, R1, R0
-				AND R0, %B 11, R0 ; zanimaju nas samo dva gumba
-
-				CMP R0, 0 ; je li nesto pretisnuto?
-				JR_NE UPD_DIR_TEST ; ako jest, provjeri u kojem smjeru
-
-				JR UPD_END ; ako nema pritiska, zavrsi
-
-UPD_DIR_TEST	CMP R0, %B 10 ; ako je prema lijevo
-				JR_EQ UPD_GOING_LEFT
-
-				MOVE 5, R2 ; dx = +5, going right
-				JR UPD_CONT
-
-UPD_GOING_LEFT	MOVE -5, R2 ; dx = -5, going left
-
-UPD_CONT		; pomakni rec uz taj dx
-				LOAD R0, (SP+18) ; adresa
-				PUSH R0
-				PUSH R2 ; dx
-				MOVE 0, R0
-				PUSH R0 ; dy = 0
-				CALL UPDATE_REC
-				ADD SP, 0C, SP
-
-UPD_END			POP R3
-				POP R2
-				POP R1
-				POP R0
-				
-				RET
 
 
 MULTIPLY		; mnozi argumente sa stacka
@@ -868,50 +602,338 @@ ORIJENTACIJA 	DW 0
 SCALE			DW 1			; Koliko pixela je velik jedan bit
 
 ZNAK_POINTER	DW 0			; Pozicija znaka u ZNAKOVI
-BOJA_BG_PNT		DW 0			; Pozicija boje pozadine
-BOJA_ZNK_PNT	DW 1			; Pozicija boje znakova
+BOJA_BG_PNT		DW 8			; Pozicija boje pozadine
+BOJA_ZNK_PNT	DW 10			; Pozicija boje znakova
 
-BUFFER			DB %B 00000000
-				DB %B 00111100
-				DB %B 01100110
-				DB %B 01100110
-				DB %B 01111110
-				DB %B 01100110
-				DB %B 01100110
-				DB %B 01100110
+BUFFER			DB %B 00000000, %B 00111100, %B 01100110, %B 01100110, %B 01111110, %B 01100110, %B 01100110, %B 01100110
 
 BOJE 			DW 0FFFF ; bijela
 CRNA			DW 0	 ; crna
-				DW 0F800 ; crvena 65K color: 16-bit/pixel (RGB 5-6-5 bits input) 
+CRVENA			DW 0F800 ; crvena 65K color: 16-bit/pixel (RGB 5-6-5 bits input) 
 ZELENA			DW 007E0 ; zelena
 PLAVA			DW 0001F ; plava
 
-ZNAKOVI			DB %B 00000000
+
+ZNAKOVI			DB %B 00000000, %B 00111100, %B 01100110, %B 01100110, %B 01111110, %B 01100110, %B 01100110, %B 01100110
+
+				DB %B 00000000, %B 01111100, %B 01100110, %B 01100110, %B 01111100, %B 01100110, %B 01100110, %B 01111100
+
+				DB %B 00000000, %B 00111100, %B 01100110, %B 01100000, %B 01100000, %B 01100000, %B 01100110, %B 00111100
+
+				DB %B 00000000, %B 01111100, %B 01100110, %B 01100110, %B 01100110, %B 01100110, %B 01100110, %B 01111100
+
+				DB %B 00000000, %B 01111110, %B 01100000, %B 01100000, %B 01111100, %B 01100000, %B 01100000, %B 01111110
+
+				DB %B 00000000, %B 01111110, %B 01100000, %B 01100000, %B 01111100, %B 01100000, %B 01100000, %B 01100000
+
+				DB %B 00000000, %B 00111100, %B 01100110, %B 01100000, %B 01100000, %B 01101110, %B 01100110, %B 00111100
+
+				DB %B 00000000, %B 01100110, %B 01100110, %B 01100110, %B 01111110, %B 01100110, %B 01100110, %B 01100110
+
+				DB %B 00000000, %B 00111100, %B 00011000, %B 00011000, %B 00011000, %B 00011000, %B 00011000, %B 00111100
+
+				DB %B 00000000
+				DB %B 00011110
+				DB %B 00001100
+				DB %B 00001100
+				DB %B 00001100
+				DB %B 01101100
+				DB %B 01101100
+				DB %B 00111000
+
+
+
+				DB %B 00000000
+				DB %B 01100110
+				DB %B 01101100
+				DB %B 01111000
+				DB %B 01110000
+				DB %B 01111000
+				DB %B 01101100
+				DB %B 01100110
+
+
+
+				DB %B 00000000
+				DB %B 01100000
+				DB %B 01100000
+				DB %B 01100000
+				DB %B 01100000
+				DB %B 01100000
+				DB %B 01100000
+				DB %B 01111110
+
+
+
+				DB %B 00000000
+				DB %B 01100011
+				DB %B 01110111
+				DB %B 01111111
+				DB %B 01101011
+				DB %B 01100011
+				DB %B 01100011
+				DB %B 01100011
+
+
+
+				DB %B 00000000
+				DB %B 01100011
+				DB %B 01110011
+				DB %B 01111011
+				DB %B 01101111
+				DB %B 01100111
+				DB %B 01100011
+				DB %B 01100011
+
+
+
+				DB %B 00000000
 				DB %B 00111100
 				DB %B 01100110
 				DB %B 01100110
+				DB %B 01100110
+				DB %B 01100110
+				DB %B 01100110
+				DB %B 00111100
+
+
+
+				DB %B 00000000
+				DB %B 01111100
+				DB %B 01100110
+				DB %B 01100110
+				DB %B 01100110
+				DB %B 01111100
+				DB %B 01100000
+				DB %B 01100000
+
+
+
+				DB %B 00000000
+				DB %B 00111100
+				DB %B 01100110
+				DB %B 01100110
+				DB %B 01100110
+				DB %B 01101110
+				DB %B 00111100
+				DB %B 00000110
+
+
+
+				DB %B 00000000
+				DB %B 01111100
+				DB %B 01100110
+				DB %B 01100110
+				DB %B 01111100
+				DB %B 01111000
+				DB %B 01101100
+				DB %B 01100110
+
+
+
+				DB %B 00000000
+				DB %B 00111100
+				DB %B 01100110
+				DB %B 01100000
+				DB %B 00111100
+				DB %B 00000110
+				DB %B 01100110
+				DB %B 00111100
+
+
+
+				DB %B 00000000
+				DB %B 01111110
+				DB %B 01011010
+				DB %B 00011000
+				DB %B 00011000
+				DB %B 00011000
+				DB %B 00011000
+				DB %B 00011000
+
+
+
+				DB %B 00000000
+				DB %B 01100110
+				DB %B 01100110
+				DB %B 01100110
+				DB %B 01100110
+				DB %B 01100110
+				DB %B 01100110
+				DB %B 00111110
+
+
+
+				DB %B 00000000
+				DB %B 01100110
+				DB %B 01100110
+				DB %B 01100110
+				DB %B 01100110
+				DB %B 01100110
+				DB %B 00111100
+				DB %B 00011000
+
+
+
+				DB %B 00000000
+				DB %B 01100011
+				DB %B 01100011
+				DB %B 01100011
+				DB %B 01101011
+				DB %B 01111111
+				DB %B 01110111
+				DB %B 01100011
+
+
+
+				DB %B 00000000
+				DB %B 01100011
+				DB %B 01100011
+				DB %B 00110110
+				DB %B 00011100
+				DB %B 00110110
+				DB %B 01100011
+				DB %B 01100011
+
+
+
+				DB %B 00000000
+				DB %B 01100110
+				DB %B 01100110
+				DB %B 01100110
+				DB %B 00111100
+				DB %B 00011000
+				DB %B 00011000
+				DB %B 00011000
+
+
+
+				DB %B 00000000
+				DB %B 01111110
+				DB %B 00000110
+				DB %B 00001100
+				DB %B 00011000
+				DB %B 00110000
+				DB %B 01100000
+				DB %B 01111110
+
+
+
+				DB %B 00000000
+				DB %B 00000000
+				DB %B 00000000
+				DB %B 00000000
+				DB %B 00000000
+				DB %B 00000000
+				DB %B 00000000
+				DB %B 00000000
+
+
+
+				DB %B 00000000
+				DB %B 00011000
+				DB %B 00011000
+				DB %B 00111000
+				DB %B 00011000
+				DB %B 00011000
+				DB %B 00011000
+				DB %B 01111110
+
+
+
+				DB %B 00000000
+				DB %B 00111100
+				DB %B 01100110
+				DB %B 00000110
+				DB %B 00001100
+				DB %B 00110000
+				DB %B 01100000
+				DB %B 01111110
+
+
+
+				DB %B 00000000
+				DB %B 00111100
+				DB %B 01100110
+				DB %B 00000110
+				DB %B 00011100
+				DB %B 00000110
+				DB %B 01100110
+				DB %B 00111100
+
+
+
+				DB %B 00000000
+				DB %B 00011100
+				DB %B 00111100
+				DB %B 01101100
+				DB %B 11001100
+				DB %B 11111110
+				DB %B 00001100
+				DB %B 00001100
+
+
+
+				DB %B 00000000
+				DB %B 01111110
+				DB %B 01100000
+				DB %B 01111100
+				DB %B 00000110
+				DB %B 00000110
+				DB %B 01100110
+				DB %B 00111100
+
+
+
+				DB %B 00000000
+				DB %B 00111100
+				DB %B 01100110
+				DB %B 01100000
+				DB %B 01111100
+				DB %B 01100110
+				DB %B 01100110
+				DB %B 00111100
+
+
+
+				DB %B 00000000
 				DB %B 01111110
 				DB %B 01100110
-				DB %B 01100110
-				DB %B 01100110
-
-
-				DB %B 00000000
-				DB %B 01111100
-				DB %B 01100110
-				DB %B 01100110
-				DB %B 01111100
-				DB %B 01100110
-				DB %B 01100110
-				DB %B 01111100
+				DB %B 00001100
+				DB %B 00001100
+				DB %B 00011000
+				DB %B 00011000
+				DB %B 00011000
 
 
 
 				DB %B 00000000
 				DB %B 00111100
 				DB %B 01100110
-				DB %B 01100000
-				DB %B 01100000
-				DB %B 01100000
+				DB %B 01100110
+				DB %B 00111100
+				DB %B 01100110
+				DB %B 01100110
+				DB %B 00111100
+
+
+
+				DB %B 00000000
+				DB %B 00111100
+				DB %B 01100110
+				DB %B 01100110
+				DB %B 00111110
+				DB %B 00000110
+				DB %B 01100110
+				DB %B 00111100
+
+
+
+				DB %B 00000000
+				DB %B 00111100
+				DB %B 01100110
+				DB %B 01101110
+				DB %B 01110110
+				DB %B 01100110
 				DB %B 01100110
 				DB %B 00111100
