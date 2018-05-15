@@ -288,6 +288,7 @@ RESET_LCD		LOAD R0, (CRNA) ; TODO: neka umjesto crne bude boja pozadine
 				;TODO: u memoriji pamtimo sve piksele, 1 piksel=16 bita - 8 za znak u odnosu na početni, 4 za svaku boju u odnosu na početnu
 				;TODO: resetiramo tu memoriju tako da su svi znakovi praznine boje pozadine
 				;TODO: sada možemo vratiti vrijednost prebrisanog znaka nakon što smo prošli kroz njega
+				;TODO: možemo i implementirati i analogon kursoru
 				;TODO: praznina neka bude prvi znak
 				;TODO: u donjim potprogramima sa inkrementiranjem i dekrementiranjem pobrinuti se za overflowanje
 				
@@ -503,7 +504,7 @@ SET_FRAME 		; postavi okvir za crtanje
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
-GLAVNA_PETLJA	UPDATE_INPUT
+GLAVNA_PETLJA	CALL UPDATE_INPUT
 				JR GLAVNA_PETLJA
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -516,7 +517,8 @@ UPDATE_INPUT	PUSH R0
 				PUSH R6
 
 				;TODO: R5 - gpio switches, R6 - gpio buttons, prvo ispitujemo switcheve koji određuju funkciju buttona u svakom modu
-				
+				;TODO: ledice switcheva ovisno o stanju
+				;TODO: ledice dugmadi ovisno o modu (ako su rgb, ako nisu, samo upalit ledice za dugmad s definiranom funkcijom)
 				
 SW_MODE_00
 SW_MODE_01
@@ -575,6 +577,9 @@ SCALE_INK ;scale inkrement
 SCALE_DEK ;scale dekrement
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ZOVI_RESET ;resetira poziciju na 0,0 i zove RESET_LCD
+				RET
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 BUFFER_ZNAK ;učitava znak iz memorije u buffer
 	;TODO: prvo zrcali oko x-osi i/ili oko y-osi ako mora
 	;TODO: poziva se nakon promjene relevantnih parametara
@@ -603,12 +608,12 @@ ISPISI_ZNAK		PUSH R0
 				LOAD R2, (POZICIJA_Y)
 
 				MOVE BUFFER, R6
-				MOVE 8, R3
+				MOVE 8, R3 					;vanjski brojač
 
 LP_REDAK_ZK		LOADB R5, (R6)
 				SHL R5, 18, R5 				; Pomak za 24 mjesta
 
-				MOVE 8, R4					; Unutarnji indeks
+				MOVE 8, R4					; Unutarnji brojač
 
 LP_STUPAC_ZK	SHL R5, 1, R5
 
@@ -663,13 +668,14 @@ ZNK_PNT_AREA	LOAD R0, (R0+BOJE)
 POZICIJA_X		DW 0			; Pixeli - apsolutne koordinate
 POZICIJA_Y		DW 0			; Pixeli
 
-REDAK			DW 0 ;trenutni red
-STUPAC		DW 0 ;trenutni stupac
+REDAK			DW 0 ;trenutni redak
+STUPAC			DW 0 ;trenutni stupac
 
 				;TODO: ako ih nećemo preračunavati, može EQU
 MAXRED			DW %D 40
 MAXSTUP			DW %D 30
 
+				;TODO: ne mora biti cijeli word, može bajt ili jedan bajt pa najniža 2 bita
 ORIJENTACIJA_X 	DW 0 			;zrcaljenje gore-dolje
 ORIJENTACIJA_Y 	DW 0			;zrcaljenje lijevo-desno
 SCALE			DW 1			; Koliko pixela je velik jedan bit
