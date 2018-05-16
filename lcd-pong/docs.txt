@@ -1,9 +1,0 @@
-Linkovi na dokumentaciju:
-• http://datasheets.gpio.dk/dl/2.4inch-tft-touch/2.4%25e4%25b8%25b2%25e5%258f%25a3_TJC-024-9341/Module_SCH.pdf
-• http://datasheets.gpio.dk/dl/ILI9341.pdf 
-o command list i opisi, str 83
-• https://s30.pixxxels.org/wqnyvhv29/Schema_ILI9341.png
-• https://en.wikipedia.org/wiki/Serial_Peripheral_Interface_Bus
-• https://github.com/BLavery/lib_tft24T 
-o https://github.com/BLavery/lib_tft24T/blob/master/lib_tft24T.py
-Vcc, led i reset pinovi idu zajedno na 3v3. DC ide na GPIO out[0]. Ostali idu na SPI, s tim da su u dokumentaciji obrnuto označeni MISO i MOSI!
