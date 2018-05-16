@@ -729,7 +729,60 @@ LP_ZRC_Y		LOADB R0, (R2)						; Swap bajtova
 				POP R1
 				POP R0
 				RET
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+UI_DRAW_BG		PUSH R0								; Crta pozadinu korisničkog sučelja
+			
+				MOVE UI_BG_BOJA, R0  				; Indeks boje za pozadinu
+				ADD R0, BOJE, R0 					; Računanje apsolutne adrese boje
+				LOAD R0, (R0)						; Čitanje boje
+				PUSH R0
 
+				MOVE UI_BG_X1, R0 					; Početna x koordinata
+				PUSH R0
+
+				MOVE UI_BG_X2, R0 					; Završna x koordinata
+				PUSH R0
+
+				MOVE UI_BG_Y1, R0 					; Početna y koordinata
+				PUSH R0
+
+				MOVE UI_BG_Y2, R0 					; Završna y koordinata
+				PUSH R0
+
+				CALL PAINT_AREA
+				ADD SP, 14, SP
+
+				POP R0
+				RET
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+UI_DRAW_ZNAK	PUSH R0 							; Crta znak u korisničkom sučelju
+				
+				LOAD R0, (POZICIJA_X)				; Spremamo kontekst
+				PUSH R0
+				LOAD R0, (POZICIJA_Y)
+				PUSH R0
+				LOAD R0, (SCALE)
+				PUSH R0
+
+				MOVE UI_ZNAK_X, R0 					; Postavljanje parametara
+				STORE R0, (POZICIJA_X)
+				MOVE UI_ZNAK_Y, R0
+				STORE R0, (POZICIJA_Y)
+				MOVE UI_ZNAK_SCALE, R0
+				STORE R0, (SCALE)
+
+				CALL ISPISI_ZNAK
+
+				POP R0 								; Vraćanje konteksta
+				STORE R0, (SCALE)
+				POP R0
+				STORE R0, (POZICIJA_Y)
+				POP R0
+				STORE R0, (POZICIJA_X)
+
+				POP R0
+				RET
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 				; Prima fiksnim memorijskim lokacijama sljedeće parametre:
 				; 1. Pozicija X 						Labela POZICIJA_X	
 				; 2. Pozicija Y 						Labela POZICIJA_Y	
@@ -828,6 +881,16 @@ BOJA_BG_PNT		DW 8			; Pozicija boje pozadine
 BOJA_ZNK_PNT	DW 10			; Pozicija boje znakova
 
 BUFFER			DB %B 00000000, %B 00111100, %B 01100110, %B 01100110, %B 01111110, %B 01100110, %B 01100110, %B 01100110 ;a
+
+UI_BG_BOJA		EQU %D 4		; Crna pozadina
+UI_BG_X1		EQU %D 0		; Početna x koordinata pozadine
+UI_BG_X2		EQU %D 240		; Završna x koordinata pozadine
+UI_BG_Y1		EQU %D 284		; Početna y koordinata pozadine - 2 * 16 za znak + 2 * 2 za obrub			
+UI_BG_Y2		EQU %D 320		; Završna y koordinata pozadine
+
+UI_ZNAK_X		EQU %D 2		; Početna x koordinata znaka
+UI_ZNAK_Y		EQU %D 286		; Početna y koordinata znaka
+UI_ZNAK_SCALE	EQU %D 2 		; SCALE znaka
 
 UKUPNO_BOJA 	EQU %D 5
 				;65K color: 16-bit/pixel (RGB 5-6-5 bits input) 
