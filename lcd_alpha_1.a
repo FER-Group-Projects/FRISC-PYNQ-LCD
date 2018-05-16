@@ -730,14 +730,13 @@ LP_ZRC_Y		LOADB R0, (R2)						; Swap bajtova
 				POP R0
 				RET
 
-;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-				; Prima stogom sljedeće parametre:
-				; 1. Pozicija X 					
-				; 2. Pozicija Y 					
-				; 3. Orijentacija (0 ili 1) 		
-				; 4. Boja znaka 					
-				; 5. Boja pozadine znaka			
-				; 6. Kod znaka	 					
+				; Prima fiksnim memorijskim lokacijama sljedeće parametre:
+				; 1. Pozicija X 						Labela POZICIJA_X	
+				; 2. Pozicija Y 						Labela POZICIJA_Y	
+				; 3. Boja znaka 						Labela BOJA_ZNK_PNT
+				; 4. Boja pozadine znaka				Labela BOJA_BG_PNT
+				; 5. Bitmapa znaka	 					Labela BUFFER
+				; 6. Veličina jednog bita u pixelima	Labela SCALE		
 ISPISI_ZNAK		PUSH R0
 				PUSH R1
 				PUSH R2
@@ -750,50 +749,51 @@ ISPISI_ZNAK		PUSH R0
 				LOAD R2, (POZICIJA_Y)
 
 				MOVE BUFFER, R6
-				MOVE 8, R3 					;vanjski brojač
+				MOVE 8, R3 							; Vanjski brojač - 8 zato što bitmapa ima 8 redova
 
-LP_REDAK_ZK		LOADB R5, (R6)
-				SHL R5, 18, R5 				; Pomak za 24 mjesta
+LP_REDAK_ZK		LOADB R5, (R6)						; Učitaj jedan bajt
+				SHL R5, 18, R5 						; Pomak za 24 mjesta - pomaknemo bajt skroz lijevo
 
-				MOVE 8, R4					; Unutarnji brojač
+				MOVE 8, R4							; Unutarnji brojač - 8 zato što bajt ima 8 bita
 
-LP_STUPAC_ZK	SHL R5, 1, R5
+LP_STUPAC_ZK	SHL R5, 1, R5						; Pomakni jedan bit lijevo
 
-				JR_NC BIT_POZADINA
+				JR_NC BIT_POZADINA					; Ako je nula, moramo bojati pozadinskom bojom
 
-BIT_ZNAK		LOAD R0, (BOJA_ZNK_PNT)
+BIT_ZNAK		LOAD R0, (BOJA_ZNK_PNT)				; Ako je jedan, učitamo pointer za boju znaka u R0
 				JR ZNK_PNT_AREA
 
-BIT_POZADINA	LOAD R0, (BOJA_BG_PNT)
+BIT_POZADINA	LOAD R0, (BOJA_BG_PNT)				; Ako je pozadina, učitamo pointer za boju pozadine u R0
 				
-ZNK_PNT_AREA	LOAD R0, (R0+BOJE)
+ZNK_PNT_AREA	LOAD R0, (R0+BOJE)					; Učitamo boju u R0. Adresa boje je određena s labelom BOJE koja pokazuje na
+													; nultu boju, te R0 koji sadrži adresni offset pojedine boje.
 
-				PUSH R0
-				PUSH R1
+				PUSH R0 							; Boja
+				PUSH R1								; x1
 
 				LOAD R0, (SCALE)
 				ADD R1, R0, R0
-				PUSH R0
+				PUSH R0 							; x2 = x1 + SCALE
 
-				PUSH R2
+				PUSH R2 							; y1
 
 				LOAD R0, (SCALE)
 				ADD R2, R0, R0
-				PUSH R0
+				PUSH R0 							; y2 = y1 + SCALE
 
-				CALL PAINT_AREA
+				CALL PAINT_AREA 					; Obojaj taj pravokutnik
 				ADD SP, 14, SP
 
-				LOAD R0, (SCALE)
-				ADD R1, R0, R1
+				LOAD R0, (SCALE) 					 
+				ADD R1, R0, R1						; Pomakni R1 (poziciju x) za SCALE piksela
 
 				SUB R4, 1, R4
 				JR_NZ LP_STUPAC_ZK
 
-				LOAD R1, (POZICIJA_X)
+				LOAD R1, (POZICIJA_X) 				; Resetiraj R1 (poziciju x) jer prelazimo u sljedeći red
 				LOAD R0, (SCALE)
-				ADD R2, R0, R2
-				ADD R6, 1, R6
+				ADD R2, R0, R2						; Pomakni R2 (poziciju y) za SCALE piksela
+				ADD R6, 1, R6 						; Pokazuje na sljedeću adresu BUFFER-a
 
 				SUB R3, 1, R3
 				JR_NZ LP_REDAK_ZK
