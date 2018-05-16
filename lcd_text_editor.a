@@ -742,8 +742,33 @@ ORJ_Y_XOR 		PUSH R0						;orijentacija_y switch
 				POP R0
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ZOVI_RESET 		;resetira poziciju na 0,0 i zove RESET_LCD
-				RET
+ZOVI_RESET 		PUSH R0						;resetira poziciju na 0,0, scale i znak i SKAČE na RESET_LCD ; NE ZVATI SA CALL
+				LOAD R0, (TR_REDAK)
+				MOVE 0, R0
+				STORE R0, (TR_REDAK)
+				
+				LOAD R0, (TR_STUPAC)
+				MOVE 0, R0
+				STORE R0, (TR_STUPAC)
+				
+				LOAD R0, (POZICIJA_X)
+				MOVE 0, R0
+				STORE R0, (POZICIJA_X)
+				
+				LOAD R0, (POZICIJA_Y)
+				MOVE 0, R0
+				STORE R0, (POZICIJA_Y)
+				
+				LOAD R0, (ZNAK_PNT)
+				MOVE 0, R0
+				STORE R0, (ZNAK_PNT)
+				
+				LOAD R0, (SCALE)
+				MOVE 1, R0
+				STORE R0, (SCALE)
+				
+				POP R0
+				JR RESET_LCD
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 CRTAJ_ZNAK ;crta znak na zaslon na pritisak gumba, nije UI!
 				RET
