@@ -292,7 +292,7 @@ RESET_LCD		LOAD R0, (CRNA) ; TODO: neka umjesto crne bude boja pozadine
 				;TODO: praznina neka bude prvi znak
 				;TODO: u donjim potprogramima sa inkrementiranjem i dekrementiranjem pobrinuti se za overflowanje
 				
-				CALL GLAVNA_PETLJA
+				JR GLAVNA_PETLJA
 
 				HALT
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
@@ -506,7 +506,9 @@ SET_FRAME 		; postavi okvir za crtanje
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
 GLAVNA_PETLJA	CALL UPDATE_INPUT
 				JR GLAVNA_PETLJA
-				RET
+				
+
+				HALT
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 UPDATE_INPUT	PUSH R0
 				PUSH R1
@@ -519,11 +521,41 @@ UPDATE_INPUT	PUSH R0
 				;TODO: R5 - gpio switches, R6 - gpio buttons, prvo ispitujemo switcheve koji određuju funkciju buttona u svakom modu
 				;TODO: ledice switcheva ovisno o stanju
 				;TODO: ledice dugmadi ovisno o modu (ako su rgb, ako nisu, samo upalit ledice za dugmad s definiranom funkcijom)
-				
+				LOAD R5, (GPIO1_SWITCHES)
+				AND R5, %B 11, R0
+				JR_Z SW_MODE_00
+
+				CMP R0, %B 01
+				JR_EQ SW_MODE_01
+
+				CMP R0, %B 10
+				JR_EQ SW_MODE_10
+
+				CMP R0, %B 11
+				JR_EQ SW_MODE_11
+
 SW_MODE_00
+
+				
+				JR END_UPDATE
+
 SW_MODE_01
+				
+
+				JR END_UPDATE
+
 SW_MODE_10
-SW_MODE_10
+
+				
+				JR END_UPDATE
+
+SW_MODE_11
+
+		
+
+				JR END_UPDATE
+
+END_UPDATE		
 				
 				POP R6
 				POP R5
@@ -674,8 +706,8 @@ STUPAC			DW 0 ;trenutni stupac
 				;TODO: ako ih nećemo preračunavati, može EQU
 MAXRED			DW %D 40
 MAXSTUP			DW %D 30
+MAXSCALE		EQU %D 31
 
-				;TODO: ne mora biti cijeli word, može bajt ili jedan bajt pa najniža 2 bita
 ORIJENTACIJA_X 	DW 0 			;zrcaljenje gore-dolje
 ORIJENTACIJA_Y 	DW 0			;zrcaljenje lijevo-desno
 SCALE			DW 1			; Koliko pixela je velik jedan bit
@@ -684,7 +716,7 @@ BILO_PROMJENE	DW 0			;Znak se ne upisuje ako nije bilo promjene
 		;TODO: kasnije možda možemo pamtiti u memoriji 16 bita za svaki pixel, pozicija 8, 4 boja znaka i 4 boja pozadine
 		;ako je zastavica BILO_PROMJENE u 0 onda vratimo vrijednost iz memorije u lcd
 
-ZNAK_POINTER	DW 0			; Pozicija znaka u ZNAKOVI
+ZNAK_PNT		DW 0			; Pozicija znaka u ZNAKOVI
 BOJA_BG_PNT		DW 8			; Pozicija boje pozadine
 BOJA_ZNK_PNT	DW 10			; Pozicija boje znakova
 
