@@ -620,7 +620,77 @@ BUFFER_ZNAK ;učitava znak iz memorije u buffer
 UPDATE_ZNAK ;šalje parametre za ispis znaka i poziva ispis znaka
 	;TODO: zove se nakon promjene bilo kojeg parametra
 				RET
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ZRCALI_X		PUSH R0 							; Zrcali BUFFER s obzirom na x-os
+				PUSH R1
+				PUSH R2
+				
+				MOVE BUFFER, R1						; Stavlja adresu prvog bajta BUFFER-a u R1
+				MOVE 8, R2 							; Brojač - 8 zato što ima 8 bajta
 
+LP_ZRC_X		LOADB R0, (R1)
+				CALL ZRCALI_BAJT_X					; Učita - zrcali - upiše natrag
+				STOREB R0, (R1)
+
+				ADD R1, 1, R1 						; Sljedeći bajt BUFFER-a
+				SUB R2, 1, R2
+				JR_NZ LP_ZRC_X
+
+				POP R2
+				POP R1
+				POP R0
+				RET
+
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ZRCALI_BAJT_X	PUSH R1								; Zrcali pojedini bajt s obzirom na x-os, prima taj bajt kao parametar preko R0
+				PUSH R2								; Vraća rezultat preko R0
+
+				MOVE 8, R1							; Brojač - 8 zato što ima 8 bita u bajtu
+				MOVE 0, R2							; Rezultat
+
+LP_ZRC_B_X		SHL R2, 1, R2 						; Pomaknemo rezultat za jedan bit lijevo
+				SHR R0, 1, R0 						; Izbacimo jedan bit iz ulaznog parametra pomakom u desno
+				ADC R2, 0, R2 						; Dodamo taj bit rezultat
+													; !!!! Ovim redoslijedom idemo kako ne bismo obrisali Carry zastavicu prije ADC
+
+				SUB R1, 1, R1
+				JR_NZ LP_ZRC_B_X
+
+				MOVE R2, R0 						; Vraćamo rezultat preko R0
+
+				POP R2
+				POP R1
+				RET
+
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ZRCALI_Y		PUSH R0 							; Zrcali BUFFER s obzirom na y-os
+				PUSH R1
+				PUSH R2
+				PUSH R3
+				PUSH R4
+
+				MOVE BUFFER, R2						; Adresa prvog bajta BUFFER-a
+				MOVE R2, R3
+				ADD R3, 7, R3						; Adresa zadnje bajta BUFFER-a
+				MOVE 4, R4 							; Brojač - 4 zato što ćemo morati napraviti 4 zamjene, prvi s zadnjim, drugi s predzadnjim itd.
+
+LP_ZRC_Y		LOADB R0, (R2)						; Swap bajtova
+				LOADB R1, (R3)
+
+				STOREB R0, (R3)
+				STOREB R1, (R2)
+
+				ADD R2, 1, R2 						; Sljedeći bajt
+				SUB R3, 1, R3						; Prethodni bajt
+				SUB R4, 1, R4
+				JR_NZ LP_ZRC_Y
+
+				POP R4
+				POP R3
+				POP R2
+				POP R1
+				POP R0
+				RET
 
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 				; Prima fiksnim memorijskim lokacijama sljedeće parametre:
