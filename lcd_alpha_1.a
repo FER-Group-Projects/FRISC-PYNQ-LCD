@@ -285,11 +285,6 @@ RESET_LCD		LOAD R0, (CRNA) ; TODO: neka umjesto crne bude boja pozadine
 				;TODO: izbriši donju liniju
 				CALL ISPISI_ZNAK
 				
-				;TODO: u memoriji pamtimo sve piksele, 1 piksel=16 bita - 8 za znak u odnosu na početni, 4 za svaku boju u odnosu na početnu
-				;TODO: resetiramo tu memoriju tako da su svi znakovi praznine boje pozadine
-				;TODO: sada možemo vratiti vrijednost prebrisanog znaka nakon što smo prošli kroz njega
-				;TODO: možemo i implementirati i analogon kursoru
-				;TODO: praznina neka bude prvi znak
 				;TODO: u donjim potprogramima sa inkrementiranjem i dekrementiranjem pobrinuti se za overflowanje
 				
 				JR GLAVNA_PETLJA
@@ -518,9 +513,13 @@ UPDATE_INPUT	PUSH R0
 				PUSH R5
 				PUSH R6
 
-				;TODO: R5 - gpio switches, R6 - gpio buttons, prvo ispitujemo switcheve koji određuju funkciju buttona u svakom modu
 				;TODO: ledice switcheva ovisno o stanju
 				;TODO: ledice dugmadi ovisno o modu (ako su rgb, ako nisu, samo upalit ledice za dugmad s definiranom funkcijom)
+				
+				LOAD R6, (GPIO1_BUTTONS)
+				CMP R6, %B 1111 			;sva 4 dugmeta = reset
+				JR_EQ ZOVI_RESET
+				
 				LOAD R5, (GPIO1_SWITCHES)
 				AND R5, %B 11, R0
 				JR_Z SW_MODE_00
@@ -534,25 +533,60 @@ UPDATE_INPUT	PUSH R0
 				CMP R0, %B 11
 				JR_EQ SW_MODE_11
 
-SW_MODE_00
+SW_MODE_00		CMP R6, %B 1000 			;mode za znakove i orijentaciju
+				CALL ZN_DEK
 
+				CMP R6, %B 0100
+				CALL ZN_INK
+				
+				CMP R6, %B 0010
+				CALL ORJ_X_XOR
+				
+				CMP R6, %B 0001
+				CALL ORJ_Y_XOR
 				
 				JR END_UPDATE
 
-SW_MODE_01
-				
+SW_MODE_01		CMP R6, %B 1000				;mode za boje
+				CALL BOJA_BG_DEK
 
+				CMP R6, %B 0100
+				CALL BOJA_BG_INK
+				
+				CMP R6, %B 0010
+				CALL BOJA_ZN_DEK
+				
+				CMP R6, %B 0001
+				CALL BOJA_ZN_INK
+				
 				JR END_UPDATE
 
-SW_MODE_10
+SW_MODE_10		CMP R6, %B 1000				;mode za navigaciju
+				CALL REDAK_DEK
 
+				CMP R6, %B 0100
+				CALL REDAK_INK
+				
+				CMP R6, %B 0010
+				CALL STUP_DEK
+				
+				CMP R6, %B 0001
+				CALL STUP_INK
 				
 				JR END_UPDATE
 
-SW_MODE_11
+SW_MODE_11		CMP R6, %B 1000				;mode za scale i unos znaka
+				CALL SCALE_DEK
 
+				CMP R6, %B 0100
+				CALL SCALE_INK
+				
+				;CMP R6, %B 0010				;dugme bez funkcije
+				;CALL
+				
+				CMP R6, %B 0001
+				CALL CRTAJ_ZNAK
 		
-
 				JR END_UPDATE
 
 END_UPDATE		
@@ -600,7 +634,7 @@ REDAK_DEK ;redak dekrement
 ORJ_X_XOR ;orijentacija_x switch
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-OR_Y_XOR ;orijentacija_y switch
+ORJ_Y_XOR ;orijentacija_y switch
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 SCALE_INK ;scale inkrement
@@ -612,6 +646,9 @@ SCALE_DEK ;scale dekrement
 ZOVI_RESET ;resetira poziciju na 0,0 i zove RESET_LCD
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+CRTAJ_ZNAK ;crta znak na zaslon na pritisak gumba, nije UI!
+				RET
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 BUFFER_ZNAK ;učitava znak iz memorije u buffer
 	;TODO: prvo zrcali oko x-osi i/ili oko y-osi ako mora
 	;TODO: poziva se nakon promjene relevantnih parametara
@@ -620,6 +657,7 @@ BUFFER_ZNAK ;učitava znak iz memorije u buffer
 UPDATE_ZNAK ;šalje parametre za ispis znaka i poziva ispis znaka
 	;TODO: zove se nakon promjene bilo kojeg parametra
 				RET
+
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ZRCALI_X		PUSH R0 							; Zrcali BUFFER s obzirom na x-os
 				PUSH R1
@@ -693,13 +731,13 @@ LP_ZRC_Y		LOADB R0, (R2)						; Swap bajtova
 				RET
 
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-				; Prima fiksnim memorijskim lokacijama sljedeće parametre:
-				; 1. Pozicija X 						Labela POZICIJA_X	
-				; 2. Pozicija Y 						Labela POZICIJA_Y	
-				; 3. Boja znaka 						Labela BOJA_ZNK_PNT
-				; 4. Boja pozadine znaka				Labela BOJA_BG_PNT
-				; 5. Bitmapa znaka	 					Labela BUFFER
-				; 6. Veličina jednog bita u pixelima	Labela SCALE		
+				; Prima stogom sljedeće parametre:
+				; 1. Pozicija X 					
+				; 2. Pozicija Y 					
+				; 3. Orijentacija (0 ili 1) 		
+				; 4. Boja znaka 					
+				; 5. Boja pozadine znaka			
+				; 6. Kod znaka	 					
 ISPISI_ZNAK		PUSH R0
 				PUSH R1
 				PUSH R2
@@ -712,51 +750,50 @@ ISPISI_ZNAK		PUSH R0
 				LOAD R2, (POZICIJA_Y)
 
 				MOVE BUFFER, R6
-				MOVE 8, R3 							; Vanjski brojač - 8 zato što bitmapa ima 8 redova
+				MOVE 8, R3 					;vanjski brojač
 
-LP_REDAK_ZK		LOADB R5, (R6)						; Učitaj jedan bajt
-				SHL R5, 18, R5 						; Pomak za 24 mjesta - pomaknemo bajt skroz lijevo
+LP_REDAK_ZK		LOADB R5, (R6)
+				SHL R5, 18, R5 				; Pomak za 24 mjesta
 
-				MOVE 8, R4							; Unutarnji brojač - 8 zato što bajt ima 8 bita
+				MOVE 8, R4					; Unutarnji brojač
 
-LP_STUPAC_ZK	SHL R5, 1, R5						; Pomakni jedan bit lijevo
+LP_STUPAC_ZK	SHL R5, 1, R5
 
-				JR_NC BIT_POZADINA					; Ako je nula, moramo bojati pozadinskom bojom
+				JR_NC BIT_POZADINA
 
-BIT_ZNAK		LOAD R0, (BOJA_ZNK_PNT)				; Ako je jedan, učitamo pointer za boju znaka u R0
+BIT_ZNAK		LOAD R0, (BOJA_ZNK_PNT)
 				JR ZNK_PNT_AREA
 
-BIT_POZADINA	LOAD R0, (BOJA_BG_PNT)				; Ako je pozadina, učitamo pointer za boju pozadine u R0
+BIT_POZADINA	LOAD R0, (BOJA_BG_PNT)
 				
-ZNK_PNT_AREA	LOAD R0, (R0+BOJE)					; Učitamo boju u R0. Adresa boje je određena s labelom BOJE koja pokazuje na
-													; nultu boju, te R0 koji sadrži adresni offset pojedine boje.
+ZNK_PNT_AREA	LOAD R0, (R0+BOJE)
 
-				PUSH R0 							; Boja
-				PUSH R1								; x1
+				PUSH R0
+				PUSH R1
 
 				LOAD R0, (SCALE)
 				ADD R1, R0, R0
-				PUSH R0 							; x2 = x1 + SCALE
+				PUSH R0
 
-				PUSH R2 							; y1
+				PUSH R2
 
 				LOAD R0, (SCALE)
 				ADD R2, R0, R0
-				PUSH R0 							; y2 = y1 + SCALE
+				PUSH R0
 
-				CALL PAINT_AREA 					; Obojaj taj pravokutnik
+				CALL PAINT_AREA
 				ADD SP, 14, SP
 
-				LOAD R0, (SCALE) 					 
-				ADD R1, R0, R1						; Pomakni R1 (poziciju x) za SCALE piksela
+				LOAD R0, (SCALE)
+				ADD R1, R0, R1
 
 				SUB R4, 1, R4
 				JR_NZ LP_STUPAC_ZK
 
-				LOAD R1, (POZICIJA_X) 				; Resetiraj R1 (poziciju x) jer prelazimo u sljedeći red
+				LOAD R1, (POZICIJA_X)
 				LOAD R0, (SCALE)
-				ADD R2, R0, R2						; Pomakni R2 (poziciju y) za SCALE piksela
-				ADD R6, 1, R6 						; Pokazuje na sljedeću adresu BUFFER-a
+				ADD R2, R0, R2
+				ADD R6, 1, R6
 
 				SUB R3, 1, R3
 				JR_NZ LP_REDAK_ZK
@@ -773,21 +810,18 @@ ZNK_PNT_AREA	LOAD R0, (R0+BOJE)					; Učitamo boju u R0. Adresa boje je određe
 POZICIJA_X		DW 0			; Pixeli - apsolutne koordinate
 POZICIJA_Y		DW 0			; Pixeli
 
-REDAK			DW 0 ;trenutni redak
-STUPAC			DW 0 ;trenutni stupac
+REDAK			DW 0 			;trenutni redak
+STUPAC			DW 0 			;trenutni stupac
 
-				;TODO: ako ih nećemo preračunavati, može EQU
-MAXRED			DW %D 40
-MAXSTUP			DW %D 30
-MAXSCALE		EQU %D 31
+MAXRED			EQU %D 40
+MAXSTUP			EQU %D 30
+MAXSCALE		EQU %D 31 		;max je 30, rušimo u 0 ako je 31
 
 ORIJENTACIJA_X 	DW 0 			;zrcaljenje gore-dolje
 ORIJENTACIJA_Y 	DW 0			;zrcaljenje lijevo-desno
 SCALE			DW 1			; Koliko pixela je velik jedan bit
 
 BILO_PROMJENE	DW 0			;Znak se ne upisuje ako nije bilo promjene
-		;TODO: kasnije možda možemo pamtiti u memoriji 16 bita za svaki pixel, pozicija 8, 4 boja znaka i 4 boja pozadine
-		;ako je zastavica BILO_PROMJENE u 0 onda vratimo vrijednost iz memorije u lcd
 
 ZNAK_PNT		DW 0			; Pozicija znaka u ZNAKOVI
 BOJA_BG_PNT		DW 8			; Pozicija boje pozadine
@@ -795,16 +829,18 @@ BOJA_ZNK_PNT	DW 10			; Pozicija boje znakova
 
 BUFFER			DB %B 00000000, %B 00111100, %B 01100110, %B 01100110, %B 01111110, %B 01100110, %B 01100110, %B 01100110 ;a
 
-UKUPNO_BOJA 	DW %D 5
+UKUPNO_BOJA 	EQU %D 5
 				;65K color: 16-bit/pixel (RGB 5-6-5 bits input) 
-BOJE 			DW 0FFFF ; bijela
-CRNA			DW 0	 ; crna
-CRVENA			DW 0F800 ; crvena 
-ZELENA			DW 007E0 ; zelena
-PLAVA			DW 0001F ; plava
+BOJE 			DW 0FFFF 		;bijela
+CRNA			DW 0	 		;crna
+CRVENA			DW 0F800 		;crvena 
+ZELENA			DW 007E0 		;zelena
+PLAVA			DW 0001F 		;plava
 
-UKUPNO_ZNAKOVA	DW %D 37
-ZNAKOVI			DB %B 00000000, %B 00111100, %B 01100110, %B 01100110, %B 01111110, %B 01100110, %B 01100110, %B 01100110 ;a
+UKUPNO_ZNAKOVA	EQU %D 37
+ZNAKOVI			DB %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000 ;praznina
+				
+				DB %B 00000000, %B 00111100, %B 01100110, %B 01100110, %B 01111110, %B 01100110, %B 01100110, %B 01100110 ;a
 
 				DB %B 00000000, %B 01111100, %B 01100110, %B 01100110, %B 01111100, %B 01100110, %B 01100110, %B 01111100 ;b
 
@@ -856,7 +892,7 @@ ZNAKOVI			DB %B 00000000, %B 00111100, %B 01100110, %B 01100110, %B 01111110, %B
 				
 				DB %B 00000000, %B 01111110, %B 00000110, %B 00001100, %B 00011000, %B 00110000, %B 01100000, %B 01111110 ;z
 				
-				DB %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000 ;praznina
+ZNAMENKE		DB %B 00000000, %B 00111100, %B 01100110, %B 01101110, %B 01110110, %B 01100110, %B 01100110, %B 00111100 ;0
 				
 				DB %B 00000000, %B 00011000, %B 00011000, %B 00111000, %B 00011000, %B 00011000, %B 00011000, %B 01111110 ;1
 				
@@ -876,4 +912,4 @@ ZNAKOVI			DB %B 00000000, %B 00111100, %B 01100110, %B 01100110, %B 01111110, %B
 				
 				DB %B 00000000, %B 00111100, %B 01100110, %B 01100110, %B 00111110, %B 00000110, %B 01100110, %B 00111100 ;9
 				
-				DB %B 00000000, %B 00111100, %B 01100110, %B 01101110, %B 01110110, %B 01100110, %B 01100110, %B 00111100 ;0
+				
