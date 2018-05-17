@@ -585,7 +585,12 @@ SW_MODE_10		CALL DIS_UPIS
 				JR END_UPDATE
 
 SW_MODE_11		MOVE %B 010010, R1			;11=zeleno-zeleno
-				CMP R6, %B 1000				;mode za scale i orijentaciju(pozitivni/negativni scale duž neke osi)
+				CMP R6, %B 0011				;mode za scale i orijentaciju(pozitivni/negativni scale duž neke osi)
+				CALL_EQ SWCH_PMT_ORJ		;ako pritisnemo switch x i y istovremeno, switchamo PAMTI_ORJ
+				CMP R6, %B 1100				;ili ako istovremeno pritisnemo scale ink i dek, što ne utječe na scale
+				CALL_EQ SWCH_PMT_ORJ
+				
+				CMP R6, %B 1000				
 				CALL_EQ SCALE_DEK
 
 				CMP R6, %B 0100
@@ -769,6 +774,13 @@ SWITCH_UPIS
 				STORE R0, (UPIS_ENABLED)
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+SWCH_PMT_ORJ	PUSH R0
+				LOAD R0, (PAMTI_ORJ)
+				XOR R0, 1, XOR
+				STORE R0, (PAMTI_ORJ)
+				POP R0
+				RET
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ZOVI_RESET 		PUSH R0						;resetira poziciju na 0,0, scale i znak i SKAČE na RESET_LCD ; NE ZVATI SA CALL
 				LOAD R0, (TR_REDAK)
 				MOVE 0, R0
@@ -811,7 +823,19 @@ BUFFER_ZNAK ;učitava znak iz memorije u buffer
 				MOVE BUFFER, R0
 				ADD R0, 4, R0
 				STORE R1, (R0)
-
+				
+				LOAD R0, (PAMTI_ORJ)				;ako pamtimo orijentaciju, treba ju promijeniti nakon učitavanja znaka
+				CMP R0, 0
+				JR_EQ NO_ORJ
+CHCK_ORJ_X		LOAD R0, (ORJ_X)
+				CMP R0,0
+				JR_EQ CHCK_ORJ_Y
+				CALL ZRCALI_X
+CHCK_ORJ_Y		LOAD R0, (ORJ_Y)
+				CMP R0,0
+				JR_EQ NO_ORJ
+				CALL ZRCALI_Y
+NO_ORJ
 				POP R1
 				POP R0
 				RET
@@ -820,7 +844,17 @@ ZRCALI_Y		PUSH R0 							; Zrcali BUFFER s obzirom na y-os
 				PUSH R1
 				PUSH R2
 				
-				MOVE BUFFER, R1						; Stavlja adresu prvog bajta BUFFER-a u R1
+				LOAD R0, (PAMTI_ORJ)				;pamtimo li orijentaciju?
+				CMP R0, 0
+				JR_EQ NO_UPDT_Y
+				LOAD R0, (ORJ_Y)					;ako da, promijeni zastavicu
+				XOR R0, 1, R0
+				STORE R0, (ORJ_Y)
+				JR ZRC_Y
+NO_UPDT_Y		MOVE 0, R0							;ako ne, stavi 0 u zastavicu
+				STORE R0, (ORJ_Y)
+
+ZRC_y			MOVE BUFFER, R1						; Stavlja adresu prvog bajta BUFFER-a u R1
 				MOVE 8, R2 							; Brojač - 8 zato što ima 8 bajta
 
 LP_ZRC_Y		LOADB R0, (R1)
@@ -863,8 +897,18 @@ ZRCALI_X		PUSH R0 							; Zrcali BUFFER s obzirom na y-os
 				PUSH R2
 				PUSH R3
 				PUSH R4
+				
+				LOAD R0, (PAMTI_ORJ)				;pamtimo li orijentaciju?
+				CMP R0, 0
+				JR_EQ NO_UPDT_X
+				LOAD R0, (ORJ_X)					;ako da, promijeni zastavicu
+				XOR R0, 1, R0
+				STORE R0, (ORJ_X)
+				JR ZRC_X
+NO_UPDT_X		MOVE 0, R0							;ako ne, stavi 0 u zastavicu
+				STORE R0, (ORJ_X)
 
-				MOVE BUFFER, R2						; Adresa prvog bajta BUFFER-a
+ZRC_X			MOVE BUFFER, R2						; Adresa prvog bajta BUFFER-a
 				MOVE R2, R3
 				ADD R3, 7, R3						; Adresa zadnje bajta BUFFER-a
 				MOVE 4, R4 							; Brojač - 4 zato što ćemo morati napraviti 4 zamjene, prvi s zadnjim, drugi s predzadnjim itd.
@@ -1035,6 +1079,10 @@ MAXSCALE		EQU %D 31 		;max je 30, rušimo u 0 ako je 31
 SCALE			DW 1			; Koliko pixela je velik jedan bit
 
 PRETH_BUTTONS	DW 0
+
+ORJ_X			DW 0
+ORJ_Y			DW 0
+PAMTI_ORJ		DW 0
 
 UPIS_ENABLED	DW 0			;služi za kontrolu crtanja, prije crtanja UI treba postaviti u 1 i nakon crtanja vratiti u prethodno stanje
 
