@@ -511,14 +511,11 @@ SET_FRAME 		; postavi okvir za crtanje
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
 GLAVNA_PETLJA	
-UPDATE_INPUT	
-				;TODO: ledice dugmadi ovisno o modu (ako su rgb, ako nisu, samo upalit ledice za dugmad s definiranom funkcijom)
-				
-				R1 - rgb ledice iznad switcheva 
-				MOVE 0, R1
-				
+UPDATE_INPUT								;opisna labela, ovdje je nekad bio kod
 				LOAD R6, (GPIO1_BUTTONS)
 				AND R6, %B 1111, R6
+				CMP R6, %B 0000
+				JR_EQ GLAVNA_PETLJA
 				CMP R6, %B 1111 			;sva 4 dugmeta = reset
 				JR_EQ ZOVI_RESET
 
@@ -548,11 +545,11 @@ SW_MODE_00		MOVE %B 100100, R1			;00=crveno-crveno
 				CMP R6, %B 0100
 				CALL_EQ ZN_INK
 				
-				;CMP R6, %B 0010			;dugme bez funkcije
-				;CALL
+				CMP R6, %B 0010			
+				CALL SWITCH_UPIS
 				
 				CMP R6, %B 0001
-				CALL_EQ ISPISI_ZNAK
+				CALL_EQ UPISI_ZNAK
 				
 				JR END_UPDATE
 
@@ -571,7 +568,8 @@ SW_MODE_01		MOVE %B 100010, R1			;01=crveno-zeleno
 				
 				JR END_UPDATE
 
-SW_MODE_10		MOVE %B 010100, R1			;10=zeleno-crveno
+SW_MODE_10		CALL DIS_UPIS
+				MOVE %B 010100, R1			;10=zeleno-crveno
 				CMP R6, %B 1000				;mode za navigaciju
 				CALL_EQ REDAK_DEK
 
@@ -747,6 +745,28 @@ SCALE_DEK 		PUSH R0						;scale dekrement
 				SUB R0, 1, R0				;0-indeksirano
 SV_SC2			STORE R0, (SCALE)
 				POP R0
+				RET
+
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+UPISI_ZNAK
+				CALL EN_UPIS 
+				CALL ISPISI_ZNAK
+				RET
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+EN_UPIS			
+				MOVE 1, R0
+				STORE R0, (UPIS_ENABLED)
+				RET
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+DIS_UPIS
+				MOVE 0, R0
+				STORE R0, (UPIS_ENABLED)
+				RET
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+SWITCH_UPIS
+				LOAD R0, (UPIS_ENABLED)
+				XOR R0, 1, R0
+				STORE R0, (UPIS_ENABLED)
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ZOVI_RESET 		PUSH R0						;resetira poziciju na 0,0, scale i znak i SKAČE na RESET_LCD ; NE ZVATI SA CALL
@@ -926,7 +946,8 @@ UI_DRAW_ZNAK	PUSH R0 							; Crta znak u korisničkom sučelju
 				; 3. Boja znaka 						Labela BOJA_ZNK_PNT
 				; 4. Boja pozadine znaka				Labela BOJA_BG_PNT
 				; 5. Bitmapa znaka	 					Labela BUFFER
-				; 6. Veličina jednog bita u pixelima	Labela SCALE		
+				; 6. Veličina jednog bita u pixelima	Labela SCALE	
+				;PRIJE UPISIVANJA ZASTAVICA UPIS_ENABLED MORA BITI 1; VAŽNO ZA UI			
 ISPISI_ZNAK		PUSH R0
 				PUSH R1
 				PUSH R2
@@ -935,6 +956,10 @@ ISPISI_ZNAK		PUSH R0
 				PUSH R5
 				PUSH R6
 
+				LOAD R0, (UPIS_ENABLED)
+				CMP R0, 0
+				JR_EQ KRAJ_ZNAKA
+				
 				LOAD R1, (POZICIJA_X)
 				LOAD R2, (POZICIJA_Y)
 
@@ -988,7 +1013,7 @@ ZNK_PNT_AREA	LOAD R0, (R0+BOJE)					; Učitamo boju u R0. Adresa boje je određe
 				SUB R3, 1, R3
 				JR_NZ LP_REDAK_ZK
 
-				POP R6
+KRAJ_ZNAKA		POP R6								;kada je crtanje onemogućeno
 				POP R5
 				POP R4
 				POP R3
@@ -1003,13 +1028,15 @@ POZICIJA_Y		DW 0			; Pixeli
 TR_REDAK		DW 0 			;trenutni redak
 TR_STUPAC		DW 0 			;trenutni stupac
 
-MAXRED			EQU %D 40		;TODO: moramo smanjit kad napravimo UI
+MAXRED			EQU %D 38		;40-2 jer 2 zauzima UI
 MAXSTUP			EQU %D 30		
 MAXSCALE		EQU %D 31 		;max je 30, rušimo u 0 ako je 31
 
 SCALE			DW 1			; Koliko pixela je velik jedan bit
 
 PRETH_BUTTONS	DW 0
+
+UPIS_ENABLED	DW 0			;mijenja se pritiskom gumba
 
 ZNAK_PNT		DW 0			; Pozicija znaka u ZNAKOVI
 BOJA_BG_PNT		DW 0			; Pozicija boje pozadine
