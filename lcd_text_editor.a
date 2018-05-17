@@ -1013,7 +1013,7 @@ BOJA_ZNK_PNT	DW 4			; Pozicija boje znakova
 
 BUFFER			DB %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000 ;praznina
 
-UI_BG_BOJA		EQU %D 64		; Crna pozadina
+UI_BG_BOJA		EQU %D 64		; Tamnosiva pozadina
 UI_BG_X1		EQU %D 0		; Početna x koordinata pozadine
 UI_BG_X2		EQU %D 240		; Završna x koordinata pozadine
 UI_BG_Y1		EQU %D 302		; Početna y koordinata pozadine - 16 za znak + 2 * 2 za obrub			
@@ -1039,9 +1039,9 @@ PLAVA			DW %B 0000000000011111 		;plava
 				DW %B 1100011100011000		;skoro bijela
 				DW %B 0011100011100111		;skoro crna
 				DW %B 1000010000010000		;siva
-				DW %B 0011100000000000		;tamno crvena
-				DW %B 0000000011100000		;tamno zelena
-				DW %B 0000000000000111		;tamno plava
+				DW %B 0111100011100111		;tamno crvena
+				DW %B 0011100111100111		;tamno zelena
+				DW %B 0011100011101111		;tamno plava
 
 				; BOJE IZVAN DOSEGA KORISNIKA
 				DW %B 0100001000001000
