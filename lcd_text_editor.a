@@ -1036,7 +1036,7 @@ SCALE			DW 1			; Koliko pixela je velik jedan bit
 
 PRETH_BUTTONS	DW 0
 
-UPIS_ENABLED	DW 0			;mijenja se pritiskom gumba
+UPIS_ENABLED	DW 0			;služi za kontrolu crtanja, prije crtanja UI treba postaviti u 1 i nakon crtanja vratiti u prethodno stanje
 
 ZNAK_PNT		DW 0			; Pozicija znaka u ZNAKOVI
 BOJA_BG_PNT		DW 0			; Pozicija boje pozadine
@@ -1070,9 +1070,9 @@ PLAVA			DW %B 0000000000011111 		;plava
 				DW %B 1100011100011000		;skoro bijela
 				DW %B 0011100011100111		;skoro crna
 				DW %B 1000010000010000		;siva
-				DW %B 0111100011100111		;tamno crvena
-				DW %B 0011100111100111		;tamno zelena
-				DW %B 0011100011101111		;tamno plava
+				DW %B 1111100011100111		;tamno crvena
+				DW %B 0011101111100111		;tamno zelena
+				DW %B 0011100011111111		;tamno plava
 
 				; BOJE IZVAN DOSEGA KORISNIKA
 				DW %B 0100001000001000
