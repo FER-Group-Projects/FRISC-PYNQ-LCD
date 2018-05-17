@@ -686,9 +686,11 @@ STUP_INK 		PUSH R0						;stupac inkrement
 				LOAD R0, (TR_STUPAC) 		
 				ADD R0, 1, R0
 				CMP R0, MAXSTUP				;0-indeksirano
-				JR_ULT SV_ST1
+				JR_NE SV_ST1
 				MOVE 0, R0					;rješavamo overflow
 SV_ST1			STORE R0, (TR_STUPAC)
+				SHL R0, 3, R0
+				STORE R0, (POZICIJA_X)
 				POP R0
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -700,6 +702,8 @@ STUP_DEK 		PUSH R0						;stupac dekrement
 				MOVE MAXSTUP, R0			;rješavamo overflow
 				SUB R0, 1, R0				;0-indeksirano
 SV_ST2			STORE R0, (TR_STUPAC)
+				SHL R0, 3, R0
+				STORE R0, (POZICIJA_X)
 				POP R0
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -707,9 +711,11 @@ REDAK_INK 		PUSH R0						;redak inkrement
 				LOAD R0, (TR_REDAK) 		
 				ADD R0, 1, R0
 				CMP R0, MAXRED				;0-indeksirano
-				JR_ULT SV_RD1
+				JR_NE SV_RD1
 				MOVE 0, R0					;rješavamo overflow
 SV_RD1			STORE R0, (TR_REDAK)
+				SHL R0, 3, R0
+				STORE R0, (POZICIJA_Y)
 				POP R0
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -721,6 +727,8 @@ REDAK_DEK		PUSH R0 					;redak dekrement
 				MOVE MAXRED, R0				;rješavamo overflow
 				SUB R0, 1, R0				;0-indeksirano
 SV_RD2			STORE R0, (TR_REDAK)
+				SHL R0, 3, R0
+				STORE R0, (POZICIJA_Y)
 				POP R0
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
