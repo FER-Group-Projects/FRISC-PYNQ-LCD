@@ -283,6 +283,9 @@ RESET_LCD		LOAD R0, (CRNA) ; TODO: neka umjesto crne bude boja pozadine
 				ADD SP, 14, SP
 
 				;TODO: izbriši donju liniju
+				MOVE 4, R0
+				STORE R0, (SCALE)
+
 				CALL ISPISI_ZNAK
 				
 				;TODO: u donjim potprogramima sa inkrementiranjem i dekrementiranjem pobrinuti se za overflowanje
@@ -301,6 +304,27 @@ INIT_BLOCK3		DB 08, 82, 27
 INIT_BLOCK4		DB 0F, 31, 2b, 0c, 0e, 08, 4e, 0f1, 37, 07, 10, 03, 0e, 09, 00
 INIT_BLOCK5		DB 00, 0e, 14, 03, 11, 07, 31, 0c1, 48, 08, 0f, 0c, 31, 36, 0f
 
+WAIT			; ceka R6 milisekundi
+				PUSH R6
+				PUSH R5
+				
+WAIT_LP_OUT		MOVE 1000, R5 ; cekaj 1 ms
+WAIT_LP_IN		SUB R5, 1, R5
+				JR_NZ WAIT_LP_IN
+
+				SUB R6, 1, R6
+				JR_NZ WAIT_LP_OUT
+
+				POP R5
+				POP R6
+
+				RET
+
+QUICK_WAIT		; ceka R6 ciklusa
+				; invalidira R6
+				SUB R6, 1, R6
+				JR_NZ QUICK_WAIT
+				RET
 
 MULTIPLY		; mnozi argumente sa stacka
 				; ne radi za mnozenje s nulom!
@@ -659,20 +683,20 @@ UPDATE_ZNAK ;šalje parametre za ispis znaka i poziva ispis znaka
 				RET
 
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ZRCALI_X		PUSH R0 							; Zrcali BUFFER s obzirom na x-os
+ZRCALI_Y		PUSH R0 							; Zrcali BUFFER s obzirom na y-os
 				PUSH R1
 				PUSH R2
 				
 				MOVE BUFFER, R1						; Stavlja adresu prvog bajta BUFFER-a u R1
 				MOVE 8, R2 							; Brojač - 8 zato što ima 8 bajta
 
-LP_ZRC_X		LOADB R0, (R1)
-				CALL ZRCALI_BAJT_X					; Učita - zrcali - upiše natrag
+LP_ZRC_Y		LOADB R0, (R1)
+				CALL ZRCALI_BAJT_Y					; Učita - zrcali - upiše natrag
 				STOREB R0, (R1)
 
 				ADD R1, 1, R1 						; Sljedeći bajt BUFFER-a
 				SUB R2, 1, R2
-				JR_NZ LP_ZRC_X
+				JR_NZ LP_ZRC_Y
 
 				POP R2
 				POP R1
@@ -680,19 +704,19 @@ LP_ZRC_X		LOADB R0, (R1)
 				RET
 
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ZRCALI_BAJT_X	PUSH R1								; Zrcali pojedini bajt s obzirom na x-os, prima taj bajt kao parametar preko R0
+ZRCALI_BAJT_Y	PUSH R1								; Zrcali pojedini bajt s obzirom na y-os, prima taj bajt kao parametar preko R0
 				PUSH R2								; Vraća rezultat preko R0
 
 				MOVE 8, R1							; Brojač - 8 zato što ima 8 bita u bajtu
 				MOVE 0, R2							; Rezultat
 
-LP_ZRC_B_X		SHL R2, 1, R2 						; Pomaknemo rezultat za jedan bit lijevo
+LP_ZRC_B_Y		SHL R2, 1, R2 						; Pomaknemo rezultat za jedan bit lijevo
 				SHR R0, 1, R0 						; Izbacimo jedan bit iz ulaznog parametra pomakom u desno
 				ADC R2, 0, R2 						; Dodamo taj bit rezultat
 													; !!!! Ovim redoslijedom idemo kako ne bismo obrisali Carry zastavicu prije ADC
 
 				SUB R1, 1, R1
-				JR_NZ LP_ZRC_B_X
+				JR_NZ LP_ZRC_B_Y
 
 				MOVE R2, R0 						; Vraćamo rezultat preko R0
 
@@ -701,7 +725,7 @@ LP_ZRC_B_X		SHL R2, 1, R2 						; Pomaknemo rezultat za jedan bit lijevo
 				RET
 
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ZRCALI_Y		PUSH R0 							; Zrcali BUFFER s obzirom na y-os
+ZRCALI_X		PUSH R0 							; Zrcali BUFFER s obzirom na y-os
 				PUSH R1
 				PUSH R2
 				PUSH R3
@@ -712,7 +736,7 @@ ZRCALI_Y		PUSH R0 							; Zrcali BUFFER s obzirom na y-os
 				ADD R3, 7, R3						; Adresa zadnje bajta BUFFER-a
 				MOVE 4, R4 							; Brojač - 4 zato što ćemo morati napraviti 4 zamjene, prvi s zadnjim, drugi s predzadnjim itd.
 
-LP_ZRC_Y		LOADB R0, (R2)						; Swap bajtova
+LP_ZRC_X		LOADB R0, (R2)						; Swap bajtova
 				LOADB R1, (R3)
 
 				STOREB R0, (R3)
@@ -721,7 +745,7 @@ LP_ZRC_Y		LOADB R0, (R2)						; Swap bajtova
 				ADD R2, 1, R2 						; Sljedeći bajt
 				SUB R3, 1, R3						; Prethodni bajt
 				SUB R4, 1, R4
-				JR_NZ LP_ZRC_Y
+				JR_NZ LP_ZRC_X
 
 				POP R4
 				POP R3
