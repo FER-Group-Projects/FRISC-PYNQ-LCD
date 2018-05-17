@@ -121,9 +121,9 @@ ILI9341_GMCTRN1   	EQU 0E1
 MAIN			MOVE 10000, SP
 
 				; signaliziraj pocetak
-				MOVE %B 100001, R0
-				STORE R0, (GPIO0_RGB)
-				
+				;MOVE %B 100001, R0
+				;STORE R0, (GPIO0_RGB)
+				;TODO: RGB LEDice
 
 				; SPI config
 				;		876543210
@@ -139,9 +139,6 @@ MAIN			MOVE 10000, SP
 
 				MOVE 100, R6
 				CALL WAIT
-
-				MOVE %B 0001, R0
-				STORE R0, (GPIO0_LEDICE)
 
 				; init lcd
 				; (sekvenca preuzeta iz python libraryja)
