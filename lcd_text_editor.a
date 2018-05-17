@@ -120,11 +120,6 @@ ILI9341_GMCTRN1   	EQU 0E1
 				
 MAIN			MOVE 10000, SP
 
-				; signaliziraj pocetak
-				;MOVE %B 100001, R0
-				;STORE R0, (GPIO0_RGB)
-				;TODO: RGB LEDice
-
 				; SPI config
 				;		876543210
 				MOVE %B 110000110, R0 ; 0x186
@@ -516,8 +511,11 @@ SET_FRAME 		; postavi okvir za crtanje
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
 GLAVNA_PETLJA	
-UPDATE_INPUT	;TODO: ledice switcheva ovisno o stanju
+UPDATE_INPUT	
 				;TODO: ledice dugmadi ovisno o modu (ako su rgb, ako nisu, samo upalit ledice za dugmad s definiranom funkcijom)
+				
+				R1 - rgb ledice iznad switcheva 
+				MOVE 0, R1
 				
 				LOAD R6, (GPIO1_BUTTONS)
 				AND R6, %B 1111, R6
@@ -543,7 +541,8 @@ UPDATE_INPUT	;TODO: ledice switcheva ovisno o stanju
 				CMP R5, %B 11
 				JR_EQ SW_MODE_11
 
-SW_MODE_00		CMP R6, %B 1000 			;mode za znakove i unos
+SW_MODE_00		MOVE %B 100100, R1			;00=crveno-crveno
+				CMP R6, %B 1000 			;mode za znakove i unos
 				CALL_EQ ZN_DEK
 
 				CMP R6, %B 0100
@@ -557,7 +556,8 @@ SW_MODE_00		CMP R6, %B 1000 			;mode za znakove i unos
 				
 				JR END_UPDATE
 
-SW_MODE_01		CMP R6, %B 1000				;mode za boje
+SW_MODE_01		MOVE %B 100010, R1			;01=crveno-zeleno
+				CMP R6, %B 1000				;mode za boje
 				CALL_EQ BOJA_BG_DEK
 
 				CMP R6, %B 0100
@@ -571,7 +571,8 @@ SW_MODE_01		CMP R6, %B 1000				;mode za boje
 				
 				JR END_UPDATE
 
-SW_MODE_10		CMP R6, %B 1000				;mode za navigaciju
+SW_MODE_10		MOVE %B 010100, R1			;10=zeleno-crveno
+				CMP R6, %B 1000				;mode za navigaciju
 				CALL_EQ REDAK_DEK
 
 				CMP R6, %B 0100
@@ -585,7 +586,8 @@ SW_MODE_10		CMP R6, %B 1000				;mode za navigaciju
 				
 				JR END_UPDATE
 
-SW_MODE_11		CMP R6, %B 1000				;mode za scale i orijentaciju(pozitivni/negativni scale duž neke osi)
+SW_MODE_11		MOVE %B 010010, R1			;11=zeleno-zeleno
+				CMP R6, %B 1000				;mode za scale i orijentaciju(pozitivni/negativni scale duž neke osi)
 				CALL_EQ SCALE_DEK
 
 				CMP R6, %B 0100
@@ -599,7 +601,9 @@ SW_MODE_11		CMP R6, %B 1000				;mode za scale i orijentaciju(pozitivni/negativni
 		
 				JR END_UPDATE
 
-END_UPDATE		CALL UI_DRAW_ZNAK
+END_UPDATE		STORE R6, (GPIO0_LEDICE)
+				STORE R1, (GPIO0_RGB)
+				CALL UI_DRAW_ZNAK
 
 				JR GLAVNA_PETLJA
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
