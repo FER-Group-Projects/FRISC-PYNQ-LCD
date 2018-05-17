@@ -282,14 +282,9 @@ RESET_LCD		LOAD R0, (CRNA) ; TODO: neka umjesto crne bude boja pozadine
 				CALL PAINT_AREA
 				ADD SP, 14, SP
 
-				;TODO: izbriši donju liniju
-				MOVE 4, R0
-				STORE R0, (SCALE)
-
-				CALL ISPISI_ZNAK
-				
-				;TODO: u donjim potprogramima sa inkrementiranjem i dekrementiranjem pobrinuti se za overflowanje
-				
+				CALL UI_DRAW_BG
+				CALL UI_DRAW_ZNAK
+					
 				JR GLAVNA_PETLJA
 
 				HALT
@@ -607,7 +602,7 @@ SW_MODE_11		CMP R6, %B 1000				;mode za scale i orijentaciju(pozitivni/negativni
 		
 				JR END_UPDATE
 
-END_UPDATE		
+END_UPDATE		CALL UI_DRAW_ZNAK
 
 				JR GLAVNA_PETLJA
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1021,23 +1016,40 @@ BOJA_ZNK_PNT	DW 4			; Pozicija boje znakova
 
 BUFFER			DB %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000 ;praznina
 
-UI_BG_BOJA		EQU %D 4		; Crna pozadina
+UI_BG_BOJA		EQU %D 64		; Crna pozadina
 UI_BG_X1		EQU %D 0		; Početna x koordinata pozadine
 UI_BG_X2		EQU %D 240		; Završna x koordinata pozadine
-UI_BG_Y1		EQU %D 284		; Početna y koordinata pozadine - 2 * 16 za znak + 2 * 2 za obrub			
+UI_BG_Y1		EQU %D 302		; Početna y koordinata pozadine - 16 za znak + 2 * 2 za obrub			
 UI_BG_Y2		EQU %D 320		; Završna y koordinata pozadine
 
 UI_ZNAK_X		EQU %D 2		; Početna x koordinata znaka
-UI_ZNAK_Y		EQU %D 286		; Početna y koordinata znaka
+UI_ZNAK_Y		EQU %D 304		; Početna y koordinata znaka
 UI_ZNAK_SCALE	EQU %D 2 		; SCALE znaka
 
-UKUPNO_BOJA 	EQU %D 5
+UKUPNO_BOJA 	EQU %D 16
 				;65K color: 16-bit/pixel (RGB 5-6-5 bits input) 
-BOJE 			DW 0FFFF 		;bijela
-CRNA			DW 0	 		;crna
-CRVENA			DW 0F800 		;crvena 
-ZELENA			DW 007E0 		;zelena
-PLAVA			DW 0001F 		;plava
+				;     RRRRRGGGGGGBBBBB
+BOJE 			DW %B 1111111111111111 		;bijela
+CRNA			DW %B 0000000000000000	 	;crna
+CRVENA			DW %B 1111100000000000 		;crvena 
+ZELENA			DW %B 0000011111100000 		;zelena
+PLAVA			DW %B 0000000000011111 		;plava
+				DW %B 1111111111100000		;žuta
+				DW %B 1111100000011111		;magenta
+				DW %B 0000011111111111		;cyan
+				DW %B 1010101010101010 		;crveno smeđa
+				DW %B 0101010101010101		;svjetlo plava
+				DW %B 1100011100011000		;skoro bijela
+				DW %B 0011100011100111		;skoro crna
+				DW %B 1000010000010000		;siva
+				DW %B 0011100000000000		;tamno crvena
+				DW %B 0000000011100000		;tamno zelena
+				DW %B 0000000000000111		;tamno plava
+
+				; BOJE IZVAN DOSEGA KORISNIKA
+				DW %B 0100001000001000
+				DW %B 0101101011101011
+				DW %B 1100011000011000		;siva
 
 UKUPNO_ZNAKOVA	EQU %D 37
 ZNAKOVI			DB %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000 ;praznina
