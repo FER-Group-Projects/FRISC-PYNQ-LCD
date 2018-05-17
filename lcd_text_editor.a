@@ -283,6 +283,9 @@ RESET_LCD		LOAD R0, (CRNA) ; TODO: neka umjesto crne bude boja pozadine
 				ADD SP, 14, SP
 
 				;TODO: izbriši donju liniju
+				MOVE 4, R0
+				STORE R0, (SCALE)
+
 				CALL ISPISI_ZNAK
 				
 				;TODO: u donjim potprogramima sa inkrementiranjem i dekrementiranjem pobrinuti se za overflowanje
@@ -301,6 +304,27 @@ INIT_BLOCK3		DB 08, 82, 27
 INIT_BLOCK4		DB 0F, 31, 2b, 0c, 0e, 08, 4e, 0f1, 37, 07, 10, 03, 0e, 09, 00
 INIT_BLOCK5		DB 00, 0e, 14, 03, 11, 07, 31, 0c1, 48, 08, 0f, 0c, 31, 36, 0f
 
+WAIT			; ceka R6 milisekundi
+				PUSH R6
+				PUSH R5
+				
+WAIT_LP_OUT		MOVE 1000, R5 ; cekaj 1 ms
+WAIT_LP_IN		SUB R5, 1, R5
+				JR_NZ WAIT_LP_IN
+
+				SUB R6, 1, R6
+				JR_NZ WAIT_LP_OUT
+
+				POP R5
+				POP R6
+
+				RET
+
+QUICK_WAIT		; ceka R6 ciklusa
+				; invalidira R6
+				SUB R6, 1, R6
+				JR_NZ QUICK_WAIT
+				RET
 
 MULTIPLY		; mnozi argumente sa stacka
 				; ne radi za mnozenje s nulom!
@@ -499,180 +523,297 @@ SET_FRAME 		; postavi okvir za crtanje
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
-GLAVNA_PETLJA	CALL UPDATE_INPUT
-				JR GLAVNA_PETLJA
-				
-
-				HALT
-;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-UPDATE_INPUT	PUSH R0
-				PUSH R1
-				PUSH R2
-				PUSH R3
-				PUSH R4
-				PUSH R5
-				PUSH R6
-
-				;TODO: ledice switcheva ovisno o stanju
+GLAVNA_PETLJA	
+UPDATE_INPUT	;TODO: ledice switcheva ovisno o stanju
 				;TODO: ledice dugmadi ovisno o modu (ako su rgb, ako nisu, samo upalit ledice za dugmad s definiranom funkcijom)
 				
 				LOAD R6, (GPIO1_BUTTONS)
+				AND R6, %B 1111, R6
 				CMP R6, %B 1111 			;sva 4 dugmeta = reset
 				JR_EQ ZOVI_RESET
+
+				LOAD R5, (PRETH_BUTTONS)
+				CMP R5, R6
+				JR_EQ GLAVNA_PETLJA
+				STORE R6, (PRETH_BUTTONS)
 				
 				LOAD R5, (GPIO1_SWITCHES)
-				AND R5, %B 11, R0
-				JR_Z SW_MODE_00
+				AND R5, %B 11, R5
+				CMP R5, %B 00
+				JR_EQ SW_MODE_00
 
-				CMP R0, %B 01
+				CMP R5, %B 01
 				JR_EQ SW_MODE_01
 
-				CMP R0, %B 10
+				CMP R5, %B 10
 				JR_EQ SW_MODE_10
 
-				CMP R0, %B 11
+				CMP R5, %B 11
 				JR_EQ SW_MODE_11
 
-SW_MODE_00		CMP R6, %B 1000 			;mode za znakove i orijentaciju
-				CALL ZN_DEK
+SW_MODE_00		CMP R6, %B 1000 			;mode za znakove i unos
+				CALL_EQ ZN_DEK
 
 				CMP R6, %B 0100
-				CALL ZN_INK
+				CALL_EQ ZN_INK
 				
-				CMP R6, %B 0010
-				CALL ORJ_X_XOR
+				;CMP R6, %B 0010			;dugme bez funkcije
+				;CALL
 				
 				CMP R6, %B 0001
-				CALL ORJ_Y_XOR
+				CALL_EQ ISPISI_ZNAK
 				
 				JR END_UPDATE
 
 SW_MODE_01		CMP R6, %B 1000				;mode za boje
-				CALL BOJA_BG_DEK
+				CALL_EQ BOJA_BG_DEK
 
 				CMP R6, %B 0100
-				CALL BOJA_BG_INK
+				CALL_EQ BOJA_BG_INK
 				
 				CMP R6, %B 0010
-				CALL BOJA_ZN_DEK
+				CALL_EQ BOJA_ZN_DEK
 				
 				CMP R6, %B 0001
-				CALL BOJA_ZN_INK
+				CALL_EQ BOJA_ZN_INK
 				
 				JR END_UPDATE
 
 SW_MODE_10		CMP R6, %B 1000				;mode za navigaciju
-				CALL REDAK_DEK
+				CALL_EQ REDAK_DEK
 
 				CMP R6, %B 0100
-				CALL REDAK_INK
+				CALL_EQ REDAK_INK
 				
 				CMP R6, %B 0010
-				CALL STUP_DEK
+				CALL_EQ STUP_DEK
 				
 				CMP R6, %B 0001
-				CALL STUP_INK
+				CALL_EQ STUP_INK
 				
 				JR END_UPDATE
 
-SW_MODE_11		CMP R6, %B 1000				;mode za scale i unos znaka
-				CALL SCALE_DEK
+SW_MODE_11		CMP R6, %B 1000				;mode za scale i orijentaciju(pozitivni/negativni scale duž neke osi)
+				CALL_EQ SCALE_DEK
 
 				CMP R6, %B 0100
-				CALL SCALE_INK
+				CALL_EQ SCALE_INK
 				
-				;CMP R6, %B 0010				;dugme bez funkcije
-				;CALL
+				CMP R6, %B 0010			
+				CALL_EQ ZRCALI_X
 				
 				CMP R6, %B 0001
-				CALL CRTAJ_ZNAK
+				CALL_EQ ZRCALI_Y
 		
 				JR END_UPDATE
 
 END_UPDATE		
-				
-				POP R6
-				POP R5
-				POP R4
-				POP R3
-				POP R2
-				POP R1
+
+				JR GLAVNA_PETLJA
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+BOJA_BG_INK 	PUSH R0						;boja pozadine inkrement
+				LOAD R0, (BOJA_BG_PNT)		
+				ADD R0, 4, R0
+				SHR R0, 2, R0
+				CMP R0, UKUPNO_BOJA			;0-indeksirano
+				JR_NE SV_BG_CL1
+				MOVE 0, R0					;rješavamo overflow
+SV_BG_CL1		SHL R0, 2, R0
+				STORE R0, (BOJA_BG_PNT)
 				POP R0
-				
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-BOJA_BG_INK ;boja pozadine inkrement
+BOJA_BG_DEK		PUSH R0						;boja pozadine dekrement
+				LOAD R0, (BOJA_BG_PNT) 		
+				SUB R0, 4, R0
+				CMP R0, -4
+				JR_NE SV_BG_CL2
+				MOVE UKUPNO_BOJA, R0		;rješavamo overflow
+				SUB R0, 1, R0				;0-indeksirano
+				SHL R0, 2, R0
+SV_BG_CL2		STORE R0, (BOJA_BG_PNT)
+				POP R0
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-BOJA_BG_DEK ;boja pozadine dekrement
-				RET
-;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-BOJA_ZN_INK ;boja znaka inkrement
+BOJA_ZN_INK		PUSH R0 					;boja znaka inkrement
+				LOAD R0, (BOJA_ZNK_PNT)		
+				ADD R0, 4, R0
+				SHR R0, 2, R0
+				CMP R0, UKUPNO_BOJA			;0-indeksirano
+				JR_NE SV_ZN_CL1
+				MOVE 0, R0					;rješavamo overflow
+SV_ZN_CL1		SHL R0, 2, R0
+				STORE R0, (BOJA_ZNK_PNT)
+				POP R0
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------				
-BOJA_ZN_DEK ;boja znaka dekrement
+BOJA_ZN_DEK		PUSH R0 					;boja znaka dekrement
+				LOAD R0, (BOJA_ZNK_PNT) 		
+				SUB R0, 4, R0
+				CMP R0, -4
+				JR_NE SV_ZN_CL2
+				MOVE UKUPNO_BOJA, R0		;rješavamo overflow
+				SUB R0, 1, R0				;0-indeksirano
+				SHL R0, 2, R0
+SV_ZN_CL2		STORE R0, (BOJA_ZNK_PNT)
+				POP R0
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ZN_INK ;znak inkrement
+ZN_INK			PUSH R0 					;znak inkrement
+				LOAD R0, (ZNAK_PNT) 		
+				ADD R0, 1, R0
+				CMP R0, UKUPNO_ZNAKOVA		;0-indeksirano
+				JR_NE SV_ZN1
+				MOVE 0, R0					;rješavamo overflow
+SV_ZN1			STORE R0, (ZNAK_PNT)
+				CALL BUFFER_ZNAK
+				POP R0
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ZN_DEK ;znak dekrement
+ZN_DEK			PUSH R0 					;znak dekrement
+				LOAD R0, (ZNAK_PNT) 		
+				SUB R0, 1, R0
+				CMP R0, -1
+				JR_NE SV_ZN2
+				MOVE UKUPNO_ZNAKOVA, R0		;rješavamo overflow
+				SUB R0, 1, R0				;0-indeksirano
+SV_ZN2			STORE R0, (ZNAK_PNT)
+				CALL BUFFER_ZNAK
+				POP R0
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-STUP_INK ;stupac inkrement
+STUP_INK 		PUSH R0						;stupac inkrement
+				LOAD R0, (TR_STUPAC) 		
+				ADD R0, 1, R0
+				CMP R0, MAXSTUP				;0-indeksirano
+				JR_NE SV_ST1
+				MOVE 0, R0					;rješavamo overflow
+SV_ST1			STORE R0, (TR_STUPAC)
+				SHL R0, 3, R0
+				STORE R0, (POZICIJA_X)
+				POP R0
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-STUP_DEK ;stupac dekrement
+STUP_DEK 		PUSH R0						;stupac dekrement
+				LOAD R0, (TR_STUPAC) 		
+				SUB R0, 1, R0
+				CMP R0, -1
+				JR_NE SV_ST2
+				MOVE MAXSTUP, R0			;rješavamo overflow
+				SUB R0, 1, R0				;0-indeksirano
+SV_ST2			STORE R0, (TR_STUPAC)
+				SHL R0, 3, R0
+				STORE R0, (POZICIJA_X)
+				POP R0
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-REDAK_INK ;redak inkrement
+REDAK_INK 		PUSH R0						;redak inkrement
+				LOAD R0, (TR_REDAK) 		
+				ADD R0, 1, R0
+				CMP R0, MAXRED				;0-indeksirano
+				JR_NE SV_RD1
+				MOVE 0, R0					;rješavamo overflow
+SV_RD1			STORE R0, (TR_REDAK)
+				SHL R0, 3, R0
+				STORE R0, (POZICIJA_Y)
+				POP R0
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-REDAK_DEK ;redak dekrement
+REDAK_DEK		PUSH R0 					;redak dekrement
+				LOAD R0, (TR_REDAK) 		
+				SUB R0, 1, R0
+				CMP R0, -1
+				JR_NE SV_RD2
+				MOVE MAXRED, R0				;rješavamo overflow
+				SUB R0, 1, R0				;0-indeksirano
+SV_RD2			STORE R0, (TR_REDAK)
+				SHL R0, 3, R0
+				STORE R0, (POZICIJA_Y)
+				POP R0
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ORJ_X_XOR ;orijentacija_x switch
+SCALE_INK 		PUSH R0						;scale inkrement
+				LOAD R0, (SCALE) 		
+				ADD R0, 1, R0
+				CMP R0, MAXSCALE			;0-indeksirano
+				JR_NE SV_SC1
+				MOVE 1, R0					;rješavamo overflow
+SV_SC1			STORE R0, (SCALE)
+				POP R0
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ORJ_Y_XOR ;orijentacija_y switch
+SCALE_DEK 		PUSH R0						;scale dekrement
+				LOAD R0, (SCALE) 		
+				SUB R0, 1, R0
+				CMP R0, 0
+				JR_NE SV_SC2
+				MOVE MAXSCALE, R0			;rješavamo overflow
+				SUB R0, 1, R0				;0-indeksirano
+SV_SC2			STORE R0, (SCALE)
+				POP R0
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-SCALE_INK ;scale inkrement
-				RET
-;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-SCALE_DEK ;scale dekrement
-				RET
-;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ZOVI_RESET ;resetira poziciju na 0,0 i zove RESET_LCD
-				RET
-;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-CRTAJ_ZNAK ;crta znak na zaslon na pritisak gumba, nije UI!
-				RET
+ZOVI_RESET 		PUSH R0						;resetira poziciju na 0,0, scale i znak i SKAČE na RESET_LCD ; NE ZVATI SA CALL
+				LOAD R0, (TR_REDAK)
+				MOVE 0, R0
+				STORE R0, (TR_REDAK)
+				
+				LOAD R0, (TR_STUPAC)
+				MOVE 0, R0
+				STORE R0, (TR_STUPAC)
+				
+				LOAD R0, (POZICIJA_X)
+				MOVE 0, R0
+				STORE R0, (POZICIJA_X)
+				
+				LOAD R0, (POZICIJA_Y)
+				MOVE 0, R0
+				STORE R0, (POZICIJA_Y)
+				
+				LOAD R0, (ZNAK_PNT)
+				MOVE 0, R0
+				STORE R0, (ZNAK_PNT)
+				
+				LOAD R0, (SCALE)
+				MOVE 1, R0
+				STORE R0, (SCALE)
+				
+				POP R0
+				JR RESET_LCD
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 BUFFER_ZNAK ;učitava znak iz memorije u buffer
-	;TODO: prvo zrcali oko x-osi i/ili oko y-osi ako mora
-	;TODO: poziva se nakon promjene relevantnih parametara
-				RET
-;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-UPDATE_ZNAK ;šalje parametre za ispis znaka i poziva ispis znaka
-	;TODO: zove se nakon promjene bilo kojeg parametra
-				RET
+				PUSH R0
+				PUSH R1
 
+				LOAD R0, (ZNAK_PNT)
+				SHL R0, 3, R0
+				LOAD R1, (R0+ZNAKOVI)
+				STORE R1, (BUFFER)
+
+				ADD R0, 4, R0
+				LOAD R1, (R0+ZNAKOVI)
+				MOVE BUFFER, R0
+				ADD R0, 4, R0
+				STORE R1, (R0)
+
+				POP R1
+				POP R0
+				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ZRCALI_X		PUSH R0 							; Zrcali BUFFER s obzirom na x-os
+ZRCALI_Y		PUSH R0 							; Zrcali BUFFER s obzirom na y-os
 				PUSH R1
 				PUSH R2
 				
 				MOVE BUFFER, R1						; Stavlja adresu prvog bajta BUFFER-a u R1
 				MOVE 8, R2 							; Brojač - 8 zato što ima 8 bajta
 
-LP_ZRC_X		LOADB R0, (R1)
-				CALL ZRCALI_BAJT_X					; Učita - zrcali - upiše natrag
+LP_ZRC_Y		LOADB R0, (R1)
+				CALL ZRCALI_BAJT_Y					; Učita - zrcali - upiše natrag
 				STOREB R0, (R1)
 
 				ADD R1, 1, R1 						; Sljedeći bajt BUFFER-a
 				SUB R2, 1, R2
-				JR_NZ LP_ZRC_X
+				JR_NZ LP_ZRC_Y
 
 				POP R2
 				POP R1
@@ -680,19 +821,19 @@ LP_ZRC_X		LOADB R0, (R1)
 				RET
 
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ZRCALI_BAJT_X	PUSH R1								; Zrcali pojedini bajt s obzirom na x-os, prima taj bajt kao parametar preko R0
+ZRCALI_BAJT_Y	PUSH R1								; Zrcali pojedini bajt s obzirom na y-os, prima taj bajt kao parametar preko R0
 				PUSH R2								; Vraća rezultat preko R0
 
 				MOVE 8, R1							; Brojač - 8 zato što ima 8 bita u bajtu
 				MOVE 0, R2							; Rezultat
 
-LP_ZRC_B_X		SHL R2, 1, R2 						; Pomaknemo rezultat za jedan bit lijevo
+LP_ZRC_B_Y		SHL R2, 1, R2 						; Pomaknemo rezultat za jedan bit lijevo
 				SHR R0, 1, R0 						; Izbacimo jedan bit iz ulaznog parametra pomakom u desno
 				ADC R2, 0, R2 						; Dodamo taj bit rezultat
 													; !!!! Ovim redoslijedom idemo kako ne bismo obrisali Carry zastavicu prije ADC
 
 				SUB R1, 1, R1
-				JR_NZ LP_ZRC_B_X
+				JR_NZ LP_ZRC_B_Y
 
 				MOVE R2, R0 						; Vraćamo rezultat preko R0
 
@@ -701,7 +842,7 @@ LP_ZRC_B_X		SHL R2, 1, R2 						; Pomaknemo rezultat za jedan bit lijevo
 				RET
 
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ZRCALI_Y		PUSH R0 							; Zrcali BUFFER s obzirom na y-os
+ZRCALI_X		PUSH R0 							; Zrcali BUFFER s obzirom na y-os
 				PUSH R1
 				PUSH R2
 				PUSH R3
@@ -712,7 +853,7 @@ ZRCALI_Y		PUSH R0 							; Zrcali BUFFER s obzirom na y-os
 				ADD R3, 7, R3						; Adresa zadnje bajta BUFFER-a
 				MOVE 4, R4 							; Brojač - 4 zato što ćemo morati napraviti 4 zamjene, prvi s zadnjim, drugi s predzadnjim itd.
 
-LP_ZRC_Y		LOADB R0, (R2)						; Swap bajtova
+LP_ZRC_X		LOADB R0, (R2)						; Swap bajtova
 				LOADB R1, (R3)
 
 				STOREB R0, (R3)
@@ -721,7 +862,7 @@ LP_ZRC_Y		LOADB R0, (R2)						; Swap bajtova
 				ADD R2, 1, R2 						; Sljedeći bajt
 				SUB R3, 1, R3						; Prethodni bajt
 				SUB R4, 1, R4
-				JR_NZ LP_ZRC_Y
+				JR_NZ LP_ZRC_X
 
 				POP R4
 				POP R3
@@ -863,24 +1004,22 @@ ZNK_PNT_AREA	LOAD R0, (R0+BOJE)					; Učitamo boju u R0. Adresa boje je određe
 POZICIJA_X		DW 0			; Pixeli - apsolutne koordinate
 POZICIJA_Y		DW 0			; Pixeli
 
-REDAK			DW 0 			;trenutni redak
-STUPAC			DW 0 			;trenutni stupac
+TR_REDAK		DW 0 			;trenutni redak
+TR_STUPAC		DW 0 			;trenutni stupac
 
-MAXRED			EQU %D 40
-MAXSTUP			EQU %D 30
+MAXRED			EQU %D 40		;TODO: moramo smanjit kad napravimo UI
+MAXSTUP			EQU %D 30		
 MAXSCALE		EQU %D 31 		;max je 30, rušimo u 0 ako je 31
 
-ORIJENTACIJA_X 	DW 0 			;zrcaljenje gore-dolje
-ORIJENTACIJA_Y 	DW 0			;zrcaljenje lijevo-desno
 SCALE			DW 1			; Koliko pixela je velik jedan bit
 
-BILO_PROMJENE	DW 0			;Znak se ne upisuje ako nije bilo promjene
+PRETH_BUTTONS	DW 0
 
 ZNAK_PNT		DW 0			; Pozicija znaka u ZNAKOVI
-BOJA_BG_PNT		DW 8			; Pozicija boje pozadine
-BOJA_ZNK_PNT	DW 10			; Pozicija boje znakova
+BOJA_BG_PNT		DW 0			; Pozicija boje pozadine
+BOJA_ZNK_PNT	DW 4			; Pozicija boje znakova
 
-BUFFER			DB %B 00000000, %B 00111100, %B 01100110, %B 01100110, %B 01111110, %B 01100110, %B 01100110, %B 01100110 ;a
+BUFFER			DB %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000 ;praznina
 
 UI_BG_BOJA		EQU %D 4		; Crna pozadina
 UI_BG_X1		EQU %D 0		; Početna x koordinata pozadine
@@ -974,5 +1113,3 @@ ZNAMENKE		DB %B 00000000, %B 00111100, %B 01100110, %B 01101110, %B 01110110, %B
 				DB %B 00000000, %B 00111100, %B 01100110, %B 01100110, %B 00111100, %B 01100110, %B 01100110, %B 00111100 ;8
 				
 				DB %B 00000000, %B 00111100, %B 01100110, %B 01100110, %B 00111110, %B 00000110, %B 01100110, %B 00111100 ;9
-				
-				
