@@ -561,7 +561,7 @@ SW_MODE_00		CMP R6, %B 1000 			;mode za znakove i unos
 				;CALL
 				
 				CMP R6, %B 0001
-				CALL_EQ CRTAJ_ZNAK
+				CALL_EQ ISPISI_ZNAK
 				
 				JR END_UPDATE
 
@@ -607,7 +607,7 @@ SW_MODE_11		CMP R6, %B 1000				;mode za scale i orijentaciju(pozitivni/negativni
 		
 				JR END_UPDATE
 
-END_UPDATE		CALL ISPISI_ZNAK
+END_UPDATE		
 
 				JR GLAVNA_PETLJA
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -780,9 +780,6 @@ ZOVI_RESET 		PUSH R0						;resetira poziciju na 0,0, scale i znak i SKAČE na RE
 				
 				POP R0
 				JR RESET_LCD
-;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-CRTAJ_ZNAK ;crta znak na zaslon na pritisak gumba, nije UI!
-				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 BUFFER_ZNAK ;učitava znak iz memorije u buffer
 				PUSH R0
