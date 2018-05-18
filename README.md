@@ -1,12 +1,13 @@
 # FRISC-PYNQ-lab2
 
-@Marko Lazarić
-@Tin Blažević
+[@Marko Lazarić](https://github.com/mlazaric), [@Tin Blažević](https://github.com/TinBlazevic)
 
 Zadatak: Zadatak 8 - Ispisivanje slova i znamenki
 
 Oprema:
 - LCD display
+- žice
+- protoboard
 
 Zadatak je napraviti potprogram za ispisivanje slova i znamenki na LCD zaslon. Potprogram
 preko stoga prima više parametara:
@@ -24,3 +25,11 @@ Napomene:
 određuje ispunjava li se određeni piksel bojom znaka ili pozadine
 4. U datoteci s primjerima postoji program koji koristi LCD, rutinu koja inicijalizira LCD se
 može preuzeti kompletno od tog rješenja
+
+![Alt text](/Slike/upute/1.jpg?raw=true "Upute za spajanje")
+![Alt text](/Slike/upute/2.jpg?raw=true "Upute za spajanje")
+![Alt text](/Slike/upute/3.jpg?raw=true "Upute za spajanje")
+![Alt text](/Slike/upute/4.jpg?raw=true "Upute za korištenje")
+
+![Alt text](/Slike/primjeri/8.jpg?raw=true "Primjer1")
+![Alt text](/Slike/primjeri/9.jpg?raw=true "Primjer2")
