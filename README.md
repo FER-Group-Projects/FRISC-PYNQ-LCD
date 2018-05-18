@@ -3,13 +3,15 @@
 [@Marko Lazarić](https://github.com/mlazaric), [@Tin Blažević](https://github.com/TinBlazevic)
 
 ## Sadržaj
+- [Zadatak](#zadatak)
 - [Rješenje](#rješenje)
 - [Korisničko sučelje](#korisničko-sučelje)
 - [Upute za korištenje](#korisničko-sučelje)
 - [Upute za spajanje](#upute-za-spajanje)
 - [Primjeri](#primjeri)
 
-Zadatak: Zadatak 8 - Ispisivanje slova i znamenki
+## Zadatak: 
+Zadatak 8 - Ispisivanje slova i znamenki
 
 Oprema:
 - LCD display
