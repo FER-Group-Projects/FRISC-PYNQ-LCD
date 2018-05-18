@@ -1563,23 +1563,43 @@ MAXSCALE		EQU %D 31 		;max je 30, rušimo u 0 ako je 31
 
 SCALE			DW 1			; Koliko pixela je velik jedan bit
 
-PRETH_BUTTONS	DW 123			;bilo koje vrijednosti koje se ne mogu zapravo pojaviti
-PRETH_MODE		DW 123
-PRETH_ORJP		DW 123
-PRETH_PRNT		DW 123
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+;     Prethodne vrijednosti nekih parametara
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PRETH_BUTTONS	DW 123			; Prethodna vrijednost gumbiju, osigurava da ne izvršimo neke radnje dva puta, npr. dva puta inkrementiramo ZNAK_PNT.
+								; Default vrijednost nije važna, postavili smo ju na 123 kako bismo osigurali da će vrijednost gumbiju biti 
+								; različita od PRETH_BUTTONS.
 
-ORJ_X			DW 0
-ORJ_Y			DW 0
-PAMTI_ORJ		DW 0
+PRETH_MODE		DW 123			; Prethodna vrijednost MODE-a, koristimo ju kako ne bismo nepotrebno crtali zastavicu MODE ako se nije promijenila.
+								; Vrijednost MODE-a je vrijednost GPIO1_SWITCHES jer oni definiraju u kojem smo trenutno MODE-u
+								;
+								; Default vrijednost nije važna, postavili smo ju na 123 kako bismo osigurali da će vrijednost MODE-a biti
+								; različita od PRETH_MODE.
 
-UPIS_ENABLED	DW 0			;služi za kontrolu crtanja, prije crtanja UI treba postaviti u 1 i nakon crtanja vratiti u prethodno stanje
+PRETH_ORJP		DW 123			; Prethodna vrijednost PAMTI_ORJ-a, koristimo ju kako ne bismo nepotrebno crtali zastavicu PAMTI_ORJ ako se nije promijenila.
+								; Default vrijednost nije važna, postavili smo ju na 123 kako bismo osigurali da će vrijednost PAMTI_ORJ-a biti
+								; različita od PRETH_ORJP.
+
+PRETH_PRNT		DW 123			; Prethodna vrijednost UPIS_ENABLED-a, koristimo ju kako ne bismo nepotrebno crtali zastavicu UPIS_ENABLED ako se nije promijenila.
+								; Default vrijednost nije važna, postavili smo ju na 123 kako bismo osigurali da će vrijednost UPIS_ENABLED-a biti
+								; različita od PRETH_PRNT.
+
+ORJ_X			DW 0			; Trenutna orijentacija s obzirom na x-os. Odnosno je li trenutni znak zrcaljen s obzirom na x-os.
+ORJ_Y			DW 0			; Trenutna orijentacija s obzirom na y-os. Odnosno je li trenutni znak zrcaljen s obzirom na y-os.
+PAMTI_ORJ		DW 0			; Zastavica treba li zapamtiti orijentaciju, odnosno treba li provjeriti ORJ_X i ORJ_Y pri odabiru novog znaka
+								; i zrcaliti u slučaju da su postavljene na 1.
+
+UPIS_ENABLED	DW 0			; Služi za kontrolu crtanja, prije crtanja UI treba postaviti u 1 i nakon crtanja vratiti u prethodno stanje
 
 ZNAK_PNT		DW 0			; Pozicija znaka u ZNAKOVI
 BOJA_BG_PNT		DW 0			; Pozicija boje pozadine
 BOJA_ZNK_PNT	DW 4			; Pozicija boje znakova
 
- ; U BUFFER spremamo trenutni znak.
+ ; U BUFFER spremamo trenutni znak kako bismo ga mogli transformirati oko x ili y osi.
+ ; Potprogram BUFFER_ZNAK učitava znak iz niza ZNAKOVI u BUFFER.
+ ;
  ; BUFFER2 je definiran zato što FRISC ne prihvaća BUFFER+4, a označava drugi bajt BUFFER-a.
+ ;
  ; Na početku je u BUFFER-u razmak (sve nule).
 BUFFER			DB %B 00000000, %B 00000000, %B 00000000, %B 00000000
 BUFFER2			DB %B 00000000, %B 00000000, %B 00000000, %B 00000000 
@@ -1659,10 +1679,14 @@ PLAVA			DW %B 0000000000011111 		;plava
 				DW %B 0101101011101011
 				DW %B 1100011000011000		;tamna siva
 
-NULA_PNT		EQU %D 27					; pokazivač na nulti znak
+NULA_PNT		EQU %D 27					; Pokazivač na nulti znak
+											; Korisno za ispis znamenaka u korisničkom sučelju.
+
 UKUPNO_ZNAKOVA	EQU %D 37					; služi za detekciju overflowa pri inkrementiranju
 
 				; Znakovi su preuzeti s https://xantorohara.github.io/led-matrix-editor/
+				; Svaki znak se sastoji od 8 bajtova, gdje svaki bit predstavlja 1 piksel.
+				; Ako je bit 0, onda je taj piksel pozadinska boja, inače je boja znaka.
 ZNAKOVI			DB %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000 ;praznina
 				
 				DB %B 00000000, %B 00111100, %B 01100110, %B 01100110, %B 01111110, %B 01100110, %B 01100110, %B 01100110 ;a
@@ -1717,6 +1741,8 @@ ZNAKOVI			DB %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B
 				
 				DB %B 00000000, %B 01111110, %B 00000110, %B 00001100, %B 00011000, %B 00110000, %B 01100000, %B 01111110 ;z
 				
+				; Labela koja označava gdje započinju znamenke.
+
 ZNAMENKE		DB %B 00000000, %B 00111100, %B 01100110, %B 01101110, %B 01110110, %B 01100110, %B 01100110, %B 00111100 ;0
 				
 				DB %B 00000000, %B 00011000, %B 00011000, %B 00111000, %B 00011000, %B 00011000, %B 00011000, %B 01111110 ;1
