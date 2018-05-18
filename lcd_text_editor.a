@@ -24,6 +24,8 @@
 ;; 		luka.macan@fer.hr
 ;;
 ;;-----------------------------------------------------------------------------------------
+;;	Projekt izradili: Marko Lazarić i Tin Blažević
+;;-----------------------------------------------------------------------------------------
 
 ;; adrese ulazno/izlaznih jedinica	
 GPIO0_LEDICE    EQU	0FFF80000
@@ -516,7 +518,7 @@ SET_FRAME 		; postavi okvir za crtanje
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
 GLAVNA_PETLJA	
 UPDATE_INPUT								;opisna labela, ovdje je nekad bio kod
-				LOAD R0, (GPIO1_SWITCHES)
+				LOAD R0, (GPIO1_SWITCHES)	;ledicu switcha u 1 bojamo u zeleno
 				MOVE 0, R1
 				SHR R0, 1, R0
 				ADC R1, 0, R1
@@ -532,10 +534,10 @@ UPDATE_INPUT								;opisna labela, ovdje je nekad bio kod
 				CALL UI_DRAW_ZAST
 				LOAD R5, (PRETH_BUTTONS)
 				CMP R5, R6
-				JR_EQ GLAVNA_PETLJA
+				JR_EQ GLAVNA_PETLJA			;nije bilo promjene, preskoči donji kod da ne crtamo bezveze
 				STORE R6, (PRETH_BUTTONS)
 				
-				LOAD R5, (GPIO1_SWITCHES)
+				LOAD R5, (GPIO1_SWITCHES)	;ispitujemo switcheve
 				AND R5, %B 11, R5
 				CMP R5, %B 00
 				JR_EQ SW_MODE_00
@@ -799,7 +801,7 @@ SWCH_PMT_ORJ	PUSH R0
 				POP R0
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ZOVI_RESET 		PUSH R0						;resetira poziciju na 0,0, scale i znak i SKAČE na RESET_LCD ; NE ZVATI SA CALL
+ZOVI_RESET 		PUSH R0						;resetira poziciju na 0,0, scale, znak i zastavice i SKAČE na RESET_LCD ; NE ZVATI SA CALL
 				LOAD R0, (TR_REDAK)
 				MOVE 0, R0
 				STORE R0, (TR_REDAK)
@@ -823,6 +825,22 @@ ZOVI_RESET 		PUSH R0						;resetira poziciju na 0,0, scale i znak i SKAČE na RE
 				LOAD R0, (SCALE)
 				MOVE 1, R0
 				STORE R0, (SCALE)
+				
+				LOAD R0, (PAMTI_ORJ)
+				MOVE 0, R0
+				STORE R0, (PAMTI_ORJ)
+				
+				LOAD R0, (ORJ_X)
+				MOVE 0, R0
+				STORE R0, (ORJ_X)
+				
+				LOAD R0, (ORJ_Y)
+				MOVE 0, R0
+				STORE R0, (ORJ_Y)
+				
+				LOAD R0, (UPIS_ENABLED)
+				MOVE 0, R0
+				STORE R0, (UPIS_ENABLED)
 				
 				POP R0
 				JR RESET_LCD
@@ -862,7 +880,7 @@ LP_DIVMOD		ADD R0, 1, R0
 
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-BUFFER_ZNAK ;učitava znak iz memorije u buffer
+BUFFER_ZNAK 										;učitava znak iz memorije u buffer
 				PUSH R0
 				PUSH R1
 
@@ -1027,7 +1045,7 @@ UI_DRAW_ZNAK	PUSH R0 							; Crta znak u korisničkom sučelju
 				POP R0
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-UI_DRAW_STUP	PUSH R0 							; Crta znak u korisničkom sučelju
+UI_DRAW_STUP	PUSH R0 							; Crta X koordinate u korisničkom sučelju, u intervalu [0,MAXSTUP-1]
 				PUSH R1
 				PUSH R2
 				
@@ -1064,7 +1082,7 @@ UI_DRAW_STUP	PUSH R0 							; Crta znak u korisničkom sučelju
 				CALL BUFFER_ZNAK
 				CALL ISPISI_ZNAK
 
-				LOAD R0, (TR_STUPAC)
+				LOAD R0, (TR_STUPAC)				;vadimo pojedine znamenke
 				PUSH R0
 				MOVE 0A, R0
 				PUSH R0
@@ -1113,7 +1131,7 @@ UI_DRAW_STUP	PUSH R0 							; Crta znak u korisničkom sučelju
 				POP R0
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-UI_DRAW_REDK	PUSH R0 							; Crta znak u korisničkom sučelju
+UI_DRAW_REDK	PUSH R0 							; Crta Y koordinate u korisničkom sučelju, u intervalu [0,MAXRED-1]
 				PUSH R1
 				PUSH R2
 				
@@ -1150,7 +1168,7 @@ UI_DRAW_REDK	PUSH R0 							; Crta znak u korisničkom sučelju
 				CALL BUFFER_ZNAK
 				CALL ISPISI_ZNAK
 
-				LOAD R0, (TR_REDAK)
+				LOAD R0, (TR_REDAK)					;vadimo pojedine znamenke
 				PUSH R0
 				MOVE 0A, R0
 				PUSH R0
@@ -1199,7 +1217,7 @@ UI_DRAW_REDK	PUSH R0 							; Crta znak u korisničkom sučelju
 				POP R0
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-UI_DRAW_SCAL	PUSH R0 							; Crta znak u korisničkom sučelju
+UI_DRAW_SCAL	PUSH R0 							; Crta faktor skaliranja u korisničkom sučelju, u intervalu [1, MAXSCALE-1]
 				PUSH R1
 				PUSH R2
 				PUSH R3
@@ -1237,7 +1255,7 @@ UI_DRAW_SCAL	PUSH R0 							; Crta znak u korisničkom sučelju
 				CALL BUFFER_ZNAK
 				CALL ISPISI_ZNAK
 
-				PUSH R3
+				PUSH R3								;vadimo pojedine znamenke
 				MOVE 0A, R0
 				PUSH R0
 				CALL DIVMOD
@@ -1286,7 +1304,7 @@ UI_DRAW_SCAL	PUSH R0 							; Crta znak u korisničkom sučelju
 				POP R0
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-UI_DRAW_ZAST	PUSH R0 							; Crta znak u korisničkom sučelju
+UI_DRAW_ZAST	PUSH R0 							; Crta korisniku bitne zastavice sučelju
 				PUSH R1
 				PUSH R2
 				
@@ -1429,17 +1447,17 @@ KRAJ_ZAST		POP R0
 				POP R0
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-UVJ_ISP_ZNK		PUSH R0
+UVJ_ISP_ZNK		PUSH R0								;uvjetno ispisivanje znaka, ne radi ništa ako je UPIS_ENABLED=0 i nije pritisnuto dugme za upis
 
 				LOAD R0, (UPIS_ENABLED)
 				CMP R0, 0
 				JR_NE UVJ_I_Z_KRAJ
 
-				LOAD R0, (GPIO1_SWITCHES)
+				LOAD R0, (GPIO1_SWITCHES)			;mode gdje je operacija za upis
 				CMP R0, 0
 				JR_NE UVJ_I_Z_KRAJ2
 
-				LOAD R0, (GPIO1_BUTTONS)
+				LOAD R0, (GPIO1_BUTTONS)			;ako je pritisnuto dugme za upis, postavimo UPIS_ENABLED i crtamo znak
 				CMP R0, %B 0001
 				JR_NE UVJ_I_Z_KRAJ2
 
@@ -1540,7 +1558,7 @@ MAXSCALE		EQU %D 31 		;max je 30, rušimo u 0 ako je 31
 
 SCALE			DW 1			; Koliko pixela je velik jedan bit
 
-PRETH_BUTTONS	DW 0
+PRETH_BUTTONS	DW 123			;bilo koje vrijednosti koje se ne mogu zapravo pojaviti
 PRETH_MODE		DW 123
 PRETH_ORJP		DW 123
 PRETH_PRNT		DW 123
@@ -1601,13 +1619,13 @@ UI_ZAST_M0		EQU %D 26		; Z
 UI_ZAST_M1		EQU %D 2		; B
 UI_ZAST_M2		EQU %D 14		; N
 UI_ZAST_M3		EQU %D 19		; S
-UI_ZAST_U0		EQU %D 0
+UI_ZAST_U0		EQU %D 0		;UPIS_ENABLED
 UI_ZAST_U1		EQU %D 16
-UI_ZAST_O0		EQU %D 0
+UI_ZAST_O0		EQU %D 0		;PAMTI_ORJ
 UI_ZAST_O1		EQU %D 15
 UI_ZAST_BOJA	EQU %D 0
 
-UKUPNO_BOJA 	EQU %D 16
+UKUPNO_BOJA 	EQU %D 16		;služi za detekciju overflowa pri inkrementiranju
 				;65K color: 16-bit/pixel (RGB 5-6-5 bits input) 
 				;     RRRRRGGGGGGBBBBB
 BOJE 			DW %B 1111111111111111 		;bijela
@@ -1627,13 +1645,13 @@ PLAVA			DW %B 0000000000011111 		;plava
 				DW %B 0011101111100111		;tamno zelena
 				DW %B 0011100011111111		;tamno plava
 
-				; BOJE IZVAN DOSEGA KORISNIKA
+				; BOJE IZVAN DOSEGA KORISNIKA, mogu se koristiti za UI koristeći offset od labele BOJE
 				DW %B 0100001000001000
 				DW %B 0101101011101011
-				DW %B 1100011000011000		;siva
+				DW %B 1100011000011000		;tamna siva
 
-NULA_PNT		EQU %D 27
-UKUPNO_ZNAKOVA	EQU %D 37
+NULA_PNT		EQU %D 27					;pokazivač na nulti znak
+UKUPNO_ZNAKOVA	EQU %D 37					;služi za detekciju overflowa pri inkrementiranju
 ZNAKOVI			DB %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 00000000 ;praznina
 				
 				DB %B 00000000, %B 00111100, %B 01100110, %B 01100110, %B 01111110, %B 01100110, %B 01100110, %B 01100110 ;a
