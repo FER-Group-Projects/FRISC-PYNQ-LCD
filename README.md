@@ -1,7 +1,6 @@
 # FRISC-PYNQ-lab2
 
-@Marko Lazarić
-@Tin Blažević
+[@Marko Lazarić](https://github.com/mlazaric), [@Tin Blažević](https://github.com/TinBlazevic)
 
 Zadatak: Zadatak 8 - Ispisivanje slova i znamenki
 
