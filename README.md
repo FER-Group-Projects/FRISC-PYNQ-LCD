@@ -2,6 +2,13 @@
 
 [@Marko Lazarić](https://github.com/mlazaric), [@Tin Blažević](https://github.com/TinBlazevic)
 
+## Sadržaj
+- [Rješenje](#rješenje)
+- [Korisničko sučelje](#korisničko-sučelje)
+- [Upute za korištenje](#korisničko-sučelje)
+- [Upute za spajanje](#upute-za-spajanje)
+- [Primjeri](#primjeri)
+
 Zadatak: Zadatak 8 - Ispisivanje slova i znamenki
 
 Oprema:
@@ -26,12 +33,12 @@ određuje ispunjava li se određeni piksel bojom znaka ili pozadine
 4. U datoteci s primjerima postoji program koji koristi LCD, rutinu koja inicijalizira LCD se
 može preuzeti kompletno od tog rješenja
 
-# Rješenje:
+## Rješenje:
 U memoriji se nalaze praznina, znakovi engleske abecede, znamenke i boje.  
 Osnovna veličina je 8x8 piksela.  
 Iz primjera je preuzeta rutina za inicijalizaciju lcd-a i potprogram za crtanje pravokutnika.  
 
-# Korisničko sučelje: 
+## Korisničko sučelje: 
   1 Pretpregled znaka za ispis  
   2 Trenutni redak   
   3 Trenutni stupac  
@@ -40,7 +47,7 @@ Iz primjera je preuzeta rutina za inicijalizaciju lcd-a i potprogram za crtanje 
   6 Zastavica za omogućen ispis  
   7 Zastavica za spremanje orijentacije  
 
-# Upute za korištenje:
+## Upute za korištenje:
 Pritisnuti sva 4 gumba odjednom u bilo kojem načinu rada za reset.
 
 Položaj switcheva definira načine rada (SW1 - lijevi bit, SW0 - desni bit)
@@ -74,14 +81,14 @@ Položaj switcheva definira načine rada (SW1 - lijevi bit, SW0 - desni bit)
 ![Upute za korištenje](/Slike/upute/4.jpg?raw=true "")
 
 
-# Upute za spajanje:
+## Upute za spajanje:
 
 ![Upute za spajanje1](/Slike/upute/1.jpg?raw=true "")
 ![Upute za spajanje2](/Slike/upute/2.jpg?raw=true "")
 ![Upute za spajanje3](/Slike/upute/3.jpg?raw=true "")
 
 
-# Primjeri:
+## Primjeri:
 
 ![Primjer1](/Slike/primjeri/8.jpg?raw=true "")
 ![Primjer2](/Slike/primjeri/9.jpg?raw=true "")
