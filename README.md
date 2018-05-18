@@ -45,29 +45,29 @@ Pritisnuti sva 4 gumba odjednom u bilo kojem načinu rada za reset.
 
 Položaj switcheva definira načine rada (SW1 - lijevi bit, SW0 - desni bit)
 
-00 - UI zastavica Z (znakovi)
-    btn1 - prethodni znak u memoriji 
-    btn2 - sljedeći znak u memoriji
-    btn3 - omogućavanje upisa on/off (UI zastavica P)
-    btn4 - omogući upis i upiši znak
+00 - UI zastavica Z (znakovi)  
+    btn1 - prethodni znak u memoriji  
+    btn2 - sljedeći znak u memoriji  
+    btn3 - omogućavanje upisa on/off (UI zastavica P)  
+    btn4 - omogući upis i upiši znak  
     
-01 - UI zastavica B (boje)
-    btn1 - prethodna boja pozadine
-    btn2 - sljedeća boja pozadine
-    btn3 - prethodna boja znaka
-    btn4 - sljedeća boja znaka
+01 - UI zastavica B (boje)  
+    btn1 - prethodna boja pozadine  
+    btn2 - sljedeća boja pozadine  
+    btn3 - prethodna boja znaka  
+    btn4 - sljedeća boja znaka  
     
-10 - UI zastavica N (navigacija)
-    btn1 - redak--
-    btn2 - redak++
-    btn3 - stupac--
-    btn4 - stupac++
+10 - UI zastavica N (navigacija)  
+    btn1 - redak--  
+    btn2 - redak++  
+    btn3 - stupac--  
+    btn4 - stupac++  
     
-11 - UI zastavica S (skaliranje)
-    btn1 - faktor skaliranja--
-    btn2 - faktor skaliranja++
-    btn3 - promijeni orijentaciju x
-    btn4 - promijeni orijentaciju y
+11 - UI zastavica S (skaliranje)  
+    btn1 - faktor skaliranja--  
+    btn2 - faktor skaliranja++  
+    btn3 - promijeni orijentaciju x  
+    btn4 - promijeni orijentaciju y  
 	
     btn1 i btn2 ili btn3 i btn4 - spremanje orijentacije on/off (UI zastavica O)
     
