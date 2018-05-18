@@ -27,6 +27,9 @@ određuje ispunjava li se određeni piksel bojom znaka ili pozadine
 4. U datoteci s primjerima postoji program koji koristi LCD, rutinu koja inicijalizira LCD se
 može preuzeti kompletno od tog rješenja
 
-![Alt text](/relative/path/to/img.jpg?raw=true "Optional Title")
-
 ![Alt text](/Slike/opisne/1.jpg?raw=true "Upute za spajanje")
+![Alt text](/Slike/opisne/2.jpg?raw=true "Upute za spajanje")
+![Alt text](/Slike/opisne/3.jpg?raw=true "Upute za spajanje")
+
+![Alt text](/Slike/pokazne/8.jpg?raw=true "Upute za spajanje")
+![Alt text](/Slike/pokazne/9.jpg?raw=true "Upute za spajanje")
