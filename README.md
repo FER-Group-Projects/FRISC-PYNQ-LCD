@@ -41,13 +41,15 @@ Osnovna veličina je 8x8 piksela.
 Iz primjera je preuzeta rutina za inicijalizaciju lcd-a i potprogram za crtanje pravokutnika.  
 
 ## Korisničko sučelje: 
-  1 Pretpregled znaka za ispis  
-  2 Trenutni redak   
-  3 Trenutni stupac  
-  4 Trenutni faktor skaliranja  
-  5 Zastavica za način rada  
-  6 Zastavica za omogućen ispis  
-  7 Zastavica za spremanje orijentacije  
+| # | Objašnjenje                          |
+|---|--------------------------------------|
+| 1 | Pretpregled znaka za ispis           |
+| 2 | Trenutni redak                       |
+| 3 | Trenutni stupac                      |
+| 4 | Trenutni faktor skaliranja           |
+| 5 | Zastavica za način rada              |
+| 6 | Zastavica za omogućen ispis          |
+| 7 | Zastavica za spremanje orijentacije  |
 
 ## Upute za korištenje:
 Pritisnuti sva 4 gumba odjednom u bilo kojem načinu rada za reset.
