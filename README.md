@@ -26,11 +26,11 @@ određuje ispunjava li se određeni piksel bojom znaka ili pozadine
 4. U datoteci s primjerima postoji program koji koristi LCD, rutinu koja inicijalizira LCD se
 može preuzeti kompletno od tog rješenja
 
-#Rješenje:
+# Rješenje:
 U memoriji se nalaze praznina, znakovi engleske abecede, znamenke i boje.
 Osnovna veličina je 8x8 piksela.
 
-#Korisničko sučelje s lijeva nadesno: 
+# Korisničko sučelje: 
   1 Pretpregled znaka za ispis
   2 Trenutni redak 
   3 Trenutni stupac
@@ -39,7 +39,7 @@ Osnovna veličina je 8x8 piksela.
   6 Zastavica za omogućen ispis
   7 Zastavica za spremanje orijentacije
 
-#Upute za korištenje:
+# Upute za korištenje:
 Pritisnuti sva 4 gumba odjednom u bilo kojem načinu rada za reset.
 
 Položaj switcheva definira načine rada:
@@ -62,24 +62,24 @@ Položaj switcheva definira načine rada:
     btn3 - stupac--
     btn4 - stupac++
     
-11 - UI zastavica S (sklairanje)
+11 - UI zastavica S (skaliranje)
     btn1 - faktor skaliranja--
     btn2 - faktor skaliranja++
     btn3 - promijeni orijentaciju x
     btn4 - promijeni orijentaciju y
     btn1 i btn2 ili btn3 i btn4 - spremanje orijentacije on/off (UI zastavica O)
     
-![Upute za korištenje](/Slike/upute/4.jpg?raw=true "Upute za korištenje")
+![Upute za korištenje](/Slike/upute/4.jpg?raw=true "")
 
 
-#Upute za spajanje:
+# Upute za spajanje:
 
-![Upute za spajanje1](/Slike/upute/1.jpg?raw=true "Upute za spajanje")
-![Upute za spajanje2](/Slike/upute/2.jpg?raw=true "Upute za spajanje")
-![Upute za spajanje3](/Slike/upute/3.jpg?raw=true "Upute za spajanje")
+![Upute za spajanje1](/Slike/upute/1.jpg?raw=true "")
+![Upute za spajanje2](/Slike/upute/2.jpg?raw=true "")
+![Upute za spajanje3](/Slike/upute/3.jpg?raw=true "")
 
 
-#Primjeri:
+# Primjeri:
 
-![Primjer1](/Slike/primjeri/8.jpg?raw=true "Primjer1")
-![Primjer2](/Slike/primjeri/9.jpg?raw=true "Primjer2")
+![Primjer1](/Slike/primjeri/8.jpg?raw=true "")
+![Primjer2](/Slike/primjeri/9.jpg?raw=true "")
