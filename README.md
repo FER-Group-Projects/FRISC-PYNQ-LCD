@@ -6,7 +6,11 @@
 - [Zadatak](#zadatak)
 - [Rješenje](#rješenje)
 - [Korisničko sučelje](#korisničko-sučelje)
-- [Upute za korištenje](#korisničko-sučelje)
+- [Upute za korištenje](#upute-za-korištenje)
+  - [00 - UI zastavica Z (znakovi)](#00---ui-zastavica-z-znakovi)
+  - [01 - UI zastavica B (boje)](#01---ui-zastavica-b-boje)
+  - [10 - UI zastavica N (navigacija)](#10---ui-zastavica-n-navigacija)
+  - [11 - UI zastavica S (skaliranje)](#11---ui-zastavica-s-skaliranje)
 - [Upute za spajanje](#upute-za-spajanje)
 - [Primjeri](#primjeri)
 
@@ -56,31 +60,39 @@ Pritisnuti sva 4 gumba odjednom u bilo kojem načinu rada za reset.
 
 Položaj switcheva definira načine rada (SW1 - lijevi bit, SW0 - desni bit)
 
-00 - UI zastavica Z (znakovi)  
-    btn3 - prethodni znak u memoriji  
-    btn2 - sljedeći znak u memoriji  
-    btn1 - omogućavanje upisa on/off (UI zastavica P)  
-    btn0 - omogući upis i upiši znak  
+### 00 - UI zastavica Z (znakovi)  
+| Gumb | Funkcija                                           |
+|------|----------------------------------------------------|
+| btn3 | Odaberi prethodni znak u memoriji                  |
+| btn2 | Odaberi sljedeći znak u memoriji                   |
+| btn1 | Komplementira omogućavanje upisa (UI zastavica P)  |
+| btn0 | Omogući upis i upiši znak                          |
     
-01 - UI zastavica B (boje)  
-    btn3 - prethodna boja pozadine  
-    btn2 - sljedeća boja pozadine  
-    btn1 - prethodna boja znaka  
-    btn0 - sljedeća boja znaka  
+### 01 - UI zastavica B (boje) 
+| Gumb | Funkcija                                           |
+|------|----------------------------------------------------|
+| btn3 | Odaberi prethodnu boju pozadine (background)       |
+| btn2 | Odaberi sljedeću boju pozadine (background)        |
+| btn1 | Odaberi prethodnu boju znaka (foreground)          |
+| btn0 | Odaberi sljedeću boju znaka (foreground)           | 
     
-10 - UI zastavica N (navigacija)  
-    btn3 - redak--  
-    btn2 - redak++  
-    btn1 - stupac--  
-    btn0 - stupac++  
+### 10 - UI zastavica N (navigacija)  
+| Gumb | Funkcija                                                      |
+|------|---------------------------------------------------------------|
+| btn3 | Smanji redak za 1, odnosno pomakni se gore za 8 piksela       |
+| btn2 | Povećaj redak za 1, odnosno pomakni se dolje za 8 piksela     |
+| btn1 | Smanji stupac za 1, odnosno pomakni se lijevo za 8 piksela    |
+| btn0 | Povećaj stupac za 1, odnosno pomakni se desno za 8 piksela    | 
     
-11 - UI zastavica S (skaliranje)  
-    btn3 - faktor skaliranja--  
-    btn2 - faktor skaliranja++  
-    btn1 - promijeni orijentaciju x  
-    btn0 - promijeni orijentaciju y  
+### 11 - UI zastavica S (skaliranje)
+| Gumb | Funkcija                         |
+|------|----------------------------------|
+| btn3 | Povećaj faktor skaliranja za 1   |
+| btn2 | Smanji faktor skaliranja za 1    |
+| btn1 | Zrcali s obzirom na x-os         |
+| btn0 | Zrcali s obzirom na y-os         | 
 	
-    btn1 i btn2 ili btn3 i btn4 - spremanje orijentacije on/off (UI zastavica O)
+ * **btn1 i btn2** ili **btn3 i btn4** - spremanje orijentacije on/off (UI zastavica O)
     
 ![Upute za korištenje](/Slike/upute/4.jpg?raw=true "")
 
