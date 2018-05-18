@@ -1586,34 +1586,34 @@ UI_ZNAK_X		EQU %D 2		; Početna x koordinata znaka
 UI_ZNAK_Y		EQU %D 304		; Početna y koordinata znaka
 UI_ZNAK_SCALE	EQU %D 2 		; SCALE znaka
 
-UI_STUP_X		EQU %D 26		; Početna x koordinata znaka
-UI_STUP_X1		EQU %D 44		; Početna x koordinata znaka
-UI_STUP_X2		EQU %D 60		; Početna x koordinata znaka
-UI_STUP_Y		EQU %D 304		; Početna y koordinata znaka
+UI_STUP_X		EQU %D 26		; Početna x koordinata znaka X
+UI_STUP_X1		EQU %D 44		; Početna x koordinata znamenke desetica
+UI_STUP_X2		EQU %D 60		; Početna x koordinata znamenke jedinica
+UI_STUP_Y		EQU %D 304		; Početna y koordinata znakova
 UI_STUP_SCALE	EQU %D 2 		; SCALE znaka
 UI_STUP_ZNAK	EQU %D 24
 UI_STUP_BOJA	EQU %D 0
 
-UI_REDK_X		EQU %D 80		; Početna x koordinata znaka
-UI_REDK_X1		EQU %D 96		; Početna x koordinata znaka
-UI_REDK_X2		EQU %D 112		; Početna x koordinata znaka
-UI_REDK_Y		EQU %D 304		; Početna y koordinata znaka
+UI_REDK_X		EQU %D 80		; Početna x koordinata znaka Y
+UI_REDK_X1		EQU %D 96		; Početna x koordinata znamenke desetica
+UI_REDK_X2		EQU %D 112		; Početna x koordinata znamenke jedinica
+UI_REDK_Y		EQU %D 304		; Početna y koordinata znakova
 UI_REDK_SCALE	EQU %D 2 		; SCALE znaka
 UI_REDK_ZNAK	EQU %D 25
 UI_REDK_BOJA	EQU %D 0
 
-UI_SCAL_X		EQU %D 132		; Početna x koordinata znaka
-UI_SCAL_X1		EQU %D 148		; Početna x koordinata znaka
-UI_SCAL_X2		EQU %D 164		; Početna x koordinata znaka
-UI_SCAL_Y		EQU %D 304		; Početna y koordinata znaka
+UI_SCAL_X		EQU %D 132		; Početna x koordinata znaka S
+UI_SCAL_X1		EQU %D 148		; Početna x koordinata znamenke desetica
+UI_SCAL_X2		EQU %D 164		; Početna x koordinata znamenke jedinica
+UI_SCAL_Y		EQU %D 304		; Početna y koordinata znakova
 UI_SCAL_SCALE	EQU %D 2 		; SCALE znaka
 UI_SCAL_ZNAK	EQU %D 19
 UI_SCAL_BOJA	EQU %D 0
 
-UI_ZAST_MX		EQU %D 180		; Početna x koordinata znaka
-UI_ZAST_UX		EQU %D 200		; Početna x koordinata znaka
-UI_ZAST_OX		EQU %D 220		; Početna x koordinata znaka
-UI_ZAST_Y		EQU %D 304		; Početna y koordinata znaka
+UI_ZAST_MX		EQU %D 184		; Početna x koordinata zastavice MODE
+UI_ZAST_UX		EQU %D 202		; Početna x koordinata zastavice UPIS_ENABLED
+UI_ZAST_OX		EQU %D 220		; Početna x koordinata zastavice PAMTI_ORJ
+UI_ZAST_Y		EQU %D 304		; Početna y koordinata znakova
 UI_ZAST_SCALE	EQU %D 2 		; SCALE znaka
 UI_ZAST_M0		EQU %D 26		; Z
 UI_ZAST_M1		EQU %D 2		; B
