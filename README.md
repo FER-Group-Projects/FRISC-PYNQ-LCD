@@ -29,6 +29,7 @@ može preuzeti kompletno od tog rješenja
 # Rješenje:
 U memoriji se nalaze praznina, znakovi engleske abecede, znamenke i boje.
 Osnovna veličina je 8x8 piksela.
+Iz primjera je preuzeta rutina za inicijalizaciju lcd-a i potprogram za crtanje pravokutnika.
 
 # Korisničko sučelje: 
   1 Pretpregled znaka za ispis  
