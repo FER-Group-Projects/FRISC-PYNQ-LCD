@@ -1576,7 +1576,7 @@ BOJA_ZNK_PNT	DW 4			; Pozicija boje znakova
 BUFFER			DB %B 00000000, %B 00000000, %B 00000000, %B 00000000
 BUFFER2			DB %B 00000000, %B 00000000, %B 00000000, %B 00000000 ;praznina
 
-UI_BG_BOJA		EQU %D 64		; Tamnosiva pozadina
+UI_BG_BOJA		EQU %D 64		; Siva pozadina
 UI_BG_X1		EQU %D 0		; Početna x koordinata pozadine
 UI_BG_X2		EQU %D 240		; Završna x koordinata pozadine
 UI_BG_Y1		EQU %D 302		; Početna y koordinata pozadine - 16 za znak + 2 * 2 za obrub			
@@ -1610,8 +1610,8 @@ UI_SCAL_SCALE	EQU %D 2 		; SCALE znaka
 UI_SCAL_ZNAK	EQU %D 19
 UI_SCAL_BOJA	EQU %D 0
 
-UI_ZAST_MX		EQU %D 188		; Početna x koordinata znaka
-UI_ZAST_UX		EQU %D 204		; Početna x koordinata znaka
+UI_ZAST_MX		EQU %D 180		; Početna x koordinata znaka
+UI_ZAST_UX		EQU %D 200		; Početna x koordinata znaka
 UI_ZAST_OX		EQU %D 220		; Početna x koordinata znaka
 UI_ZAST_Y		EQU %D 304		; Početna y koordinata znaka
 UI_ZAST_SCALE	EQU %D 2 		; SCALE znaka
