@@ -26,10 +26,10 @@ određuje ispunjava li se određeni piksel bojom znaka ili pozadine
 4. U datoteci s primjerima postoji program koji koristi LCD, rutinu koja inicijalizira LCD se
 može preuzeti kompletno od tog rješenja
 
-![Alt text](/Slike/upute/1.jpg?raw=true "Upute za spajanje")
-![Alt text](/Slike/upute/2.jpg?raw=true "Upute za spajanje")
-![Alt text](/Slike/upute/3.jpg?raw=true "Upute za spajanje")
-![Alt text](/Slike/upute/4.jpg?raw=true "Upute za korištenje")
+![Upute za spajanje1](/Slike/upute/1.jpg?raw=true "Upute za spajanje")
+![Upute za spajanje2](/Slike/upute/2.jpg?raw=true "Upute za spajanje")
+![Upute za spajanje3](/Slike/upute/3.jpg?raw=true "Upute za spajanje")
+![Upute za korištenje](/Slike/upute/4.jpg?raw=true "Upute za korištenje")
 
-![Alt text](/Slike/primjeri/8.jpg?raw=true "Primjer1")
-![Alt text](/Slike/primjeri/9.jpg?raw=true "Primjer2")
+![Primjer1](/Slike/primjeri/8.jpg?raw=true "Primjer1")
+![Primjer2](/Slike/primjeri/9.jpg?raw=true "Primjer2")
