@@ -1604,7 +1604,13 @@ UPIS_ENABLED	DW 0			; Služi za kontrolu crtanja, prije crtanja UI treba postavi
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;     Kod znaka i boje
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ ; Označava poziciju znaka u znakovnom nizu ZNAKOVI.
+ ; Razmak je 0, A je 1 itd. tu vrijednost shiftamo lijevo za 3 i dodajemo labeli ZNAKOVI kako bismo došli do bitmape konkretnog znaka.
 ZNAK_PNT		DW 0			; Pozicija znaka u ZNAKOVI
+
+ ; Označava poziciju znaka u nizu BOJE.
+ ; !!!!! Treba paziti da ove ne shiftamo lijevo, stoga moraju biti višekratnici 4. Samo se pridodaju labeli BOJE kako bismo dobili adresu konkretne boje.
+ ; 0 odgovara bijeloj, 4 crnoj itd.
 BOJA_BG_PNT		DW 0			; Pozicija boje pozadine
 BOJA_ZNK_PNT	DW 4			; Pozicija boje znakova
 
