@@ -1550,13 +1550,19 @@ KRAJ_ZNAKA		POP R6								;kada je crtanje onemogućeno
 				POP R1
 				POP R0
 				RET
+
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+;     Pozicijske varijable
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 POZICIJA_X		DW 0			; Pixeli - apsolutne koordinate
 POZICIJA_Y		DW 0			; Pixeli
 
-TR_REDAK		DW 0 			;trenutni redak
-TR_STUPAC		DW 0 			;trenutni stupac
+ ; Grupirali smo piksele u grupe od 8x8 radi jednostavnosti pri navigaciji u korisničkom sučelju.
+ ; Svaki redak je visok 8 piksela, a svaki stupac je širok 8 piksela.
+TR_REDAK		DW 0 			; Trenutni redak
+TR_STUPAC		DW 0 			; Trenutni stupac
 
+ ; Maksimalne vrijednosti koje dopuštamo korisniku. Ako ih pređe, tu varijablu prebacujemo u minimalnu vrijednost (0 ili 1 ovisno o varijabli).
 MAXRED			EQU %D 38		;40-2 jer 2 zauzima UI
 MAXSTUP			EQU %D 30		
 MAXSCALE		EQU %D 31 		;max je 30, rušimo u 0 ako je 31
@@ -1584,17 +1590,27 @@ PRETH_PRNT		DW 123			; Prethodna vrijednost UPIS_ENABLED-a, koristimo ju kako ne
 								; Default vrijednost nije važna, postavili smo ju na 123 kako bismo osigurali da će vrijednost UPIS_ENABLED-a biti
 								; različita od PRETH_PRNT.
 
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+;     Zastavice vezane uz orijentaciju znaka i printanje znaka
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ORJ_X			DW 0			; Trenutna orijentacija s obzirom na x-os. Odnosno je li trenutni znak zrcaljen s obzirom na x-os.
 ORJ_Y			DW 0			; Trenutna orijentacija s obzirom na y-os. Odnosno je li trenutni znak zrcaljen s obzirom na y-os.
 PAMTI_ORJ		DW 0			; Zastavica treba li zapamtiti orijentaciju, odnosno treba li provjeriti ORJ_X i ORJ_Y pri odabiru novog znaka
 								; i zrcaliti u slučaju da su postavljene na 1.
 
 UPIS_ENABLED	DW 0			; Služi za kontrolu crtanja, prije crtanja UI treba postaviti u 1 i nakon crtanja vratiti u prethodno stanje
+								; Ako promijenimo znak dok je ova zastavica u 1, onda će se znak automatski ispisati na trenutno mjesto.
 
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+;     Kod znaka i boje
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ZNAK_PNT		DW 0			; Pozicija znaka u ZNAKOVI
 BOJA_BG_PNT		DW 0			; Pozicija boje pozadine
 BOJA_ZNK_PNT	DW 4			; Pozicija boje znakova
 
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+;     BUFFER
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  ; U BUFFER spremamo trenutni znak kako bismo ga mogli transformirati oko x ili y osi.
  ; Potprogram BUFFER_ZNAK učitava znak iz niza ZNAKOVI u BUFFER.
  ;
@@ -1604,6 +1620,9 @@ BOJA_ZNK_PNT	DW 4			; Pozicija boje znakova
 BUFFER			DB %B 00000000, %B 00000000, %B 00000000, %B 00000000
 BUFFER2			DB %B 00000000, %B 00000000, %B 00000000, %B 00000000 
 
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+;     Korisničko sučelje
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 UI_BG_BOJA		EQU %D 64		; Siva pozadina
 UI_BG_X1		EQU %D 0		; Početna x koordinata pozadine
 UI_BG_X2		EQU %D 240		; Završna x koordinata pozadine
@@ -1653,6 +1672,9 @@ UI_ZAST_O0		EQU %D 0		; Razmak - PAMTI_ORJ = 0
 UI_ZAST_O1		EQU %D 15		; O - PAMTI_ORJ = 1
 UI_ZAST_BOJA	EQU %D 0		; Boja zastavica - bijela
 
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+;     Boje
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 UKUPNO_BOJA 	EQU %D 16		;služi za detekciju overflowa pri inkrementiranju
 
 				; 65K color: 16-bit/pixel (RGB 5-6-5 bits input) 
@@ -1679,6 +1701,9 @@ PLAVA			DW %B 0000000000011111 		;plava
 				DW %B 0101101011101011
 				DW %B 1100011000011000		;tamna siva
 
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+;     Znakovi
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 NULA_PNT		EQU %D 27					; Pokazivač na nulti znak
 											; Korisno za ispis znamenaka u korisničkom sučelju.
 
