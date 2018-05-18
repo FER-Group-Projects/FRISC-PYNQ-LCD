@@ -24,7 +24,8 @@
 ;; 		luka.macan@fer.hr
 ;;
 ;;-----------------------------------------------------------------------------------------
-;;	Projekt izradili: Marko Lazarić i Tin Blažević
+;;	Izradili: Marko Lazarić i Tin Blažević
+;;  Rutina za lcd i potprogram za crtanje pravokutnika preuzeti iz primjera
 ;;-----------------------------------------------------------------------------------------
 
 ;; adrese ulazno/izlaznih jedinica	
@@ -276,12 +277,7 @@ RESET_LCD		LOAD R0, (CRNA)
 				CALL PAINT_AREA
 				ADD SP, 14, SP
 
-				CALL UI_DRAW_BG
-				CALL UI_DRAW_ZNAK
-				CALL UI_DRAW_STUP
-				CALL UI_DRAW_REDK
-				CALL UI_DRAW_SCAL
-				CALL UI_DRAW_ZAST
+				CALL UI_DRAW_ALL
 
 				JR GLAVNA_PETLJA
 
@@ -600,8 +596,8 @@ SW_MODE_10		CALL DIS_UPIS
 				JR END_UPDATE
 
 SW_MODE_11		CMP R6, %B 0011				;mode za scale i orijentaciju(pozitivni/negativni scale duž neke osi)
-				CALL_EQ SWCH_PMT_ORJ		;ako pritisnemo switch x i y istovremeno, switchamo PAMTI_ORJ
-				CMP R6, %B 1100				;ili ako istovremeno pritisnemo scale ink i dek, što ne utječe na scale
+				CALL_EQ SWCH_ROT90			;ako pritisnemo switch x i y istovremeno, komplementiramo ROT90
+				CMP R6, %B 1100				;ako istovremeno pritisnemo scale ink i dek, komplementiramo PAMTI_ORJ
 				CALL_EQ SWCH_PMT_ORJ
 				
 				CMP R6, %B 1000				
@@ -776,6 +772,15 @@ UPISI_ZNAK
 				CALL EN_UPIS 
 				CALL ISPISI_ZNAK
 
+				RET
+
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+SWCH_ROT90		PUSH R0
+				LOAD R0, (ROT90)
+				XOR R0, 1, R0
+				STORE R0, (ROT90)
+				POP R0
+				CALL UI_DRAW_ALL
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 EN_UPIS			
@@ -990,6 +995,14 @@ LP_ZRC_X		LOADB R0, (R2)						; Swap bajtova
 				POP R2
 				POP R1
 				POP R0
+				RET
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+UI_DRAW_ALL		CALL UI_DRAW_BG
+				CALL UI_DRAW_ZNAK
+				CALL UI_DRAW_STUP
+				CALL UI_DRAW_REDK
+				CALL UI_DRAW_SCAL
+				CALL UI_DRAW_ZAST
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 UI_DRAW_BG		PUSH R0								; Crta pozadinu korisničkog sučelja
@@ -1484,7 +1497,15 @@ ISPISI_ZNAK		PUSH R0
 				PUSH R5
 				PUSH R6
 				
-				LOAD R1, (POZICIJA_X)
+				;provjera je li sve zarotirano za 90
+				LOAD R0, (ROT90)
+				CMP R0, 0
+				JR_EQ NIJE_ROT
+				CALL ISP_ZNK_ROT90
+				JR KRAJ_ZNAKA
+				
+				
+NIJE_ROT		LOAD R1, (POZICIJA_X)
 				LOAD R2, (POZICIJA_Y)
 
 				MOVE BUFFER, R6
@@ -1546,6 +1567,77 @@ KRAJ_ZNAKA		POP R6								;kada je crtanje onemogućeno
 				POP R0
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+				;Isto kao ISPISI_ZNAK, ali ima zamijenjene retke i stupce u dvostrukoj petlji	
+ISP_ZNK_ROT90	PUSH R0
+				PUSH R1
+				PUSH R2
+				PUSH R3
+				PUSH R4
+				PUSH R5
+				PUSH R6
+				
+				LOAD R1, (POZICIJA_X)
+				LOAD R2, (POZICIJA_Y)
+
+				MOVE BUFFER, R6
+				MOVE 8, R3 							; Vanjski brojač - 8 zato što bitmapa ima 8 redova
+
+LP_STPC_2		LOADB R5, (R6)						; Učitaj jedan bajt
+				SHL R5, 18, R5 						; Pomak za 24 mjesta - pomaknemo bajt skroz lijevo
+
+				MOVE 8, R4							; Unutarnji brojač - 8 zato što bajt ima 8 bita
+
+LP_REDK_2		SHL R5, 1, R5						; Pomakni jedan bit lijevo
+
+				JR_NC BIT_PZD2						; Ako je nula, moramo bojati pozadinskom bojom
+
+BIT_ZNK2		LOAD R0, (BOJA_ZNK_PNT)				; Ako je jedan, učitamo pointer za boju znaka u R0
+				JR ZNK_AR2_PAINT
+
+BIT_PZD2		LOAD R0, (BOJA_BG_PNT)				; Ako je pozadina, učitamo pointer za boju pozadine u R0
+				
+ZNK_AR2_PAINT	LOAD R0, (R0+BOJE)					; Učitamo boju u R0. Adresa boje je određena s labelom BOJE koja pokazuje na
+													; nultu boju, te R0 koji sadrži adresni offset pojedine boje.
+
+				PUSH R0 							; Boja
+				PUSH R2								; x1
+
+				LOAD R0, (SCALE)
+				ADD R2, R0, R0
+				PUSH R0 							; x2 = x1 + SCALE
+
+				PUSH R1 							; y1
+
+				LOAD R0, (SCALE)
+				ADD R1, R0, R0
+				PUSH R0 							; y2 = y1 + SCALE
+
+				CALL PAINT_AREA 					; Obojaj taj pravokutnik
+				ADD SP, 14, SP
+
+				LOAD R0, (SCALE) 					 
+				ADD R1, R0, R1						; Pomakni R1 (poziciju x) za SCALE piksela
+
+				SUB R4, 1, R4
+				JR_NZ LP_REDK_2
+
+				LOAD R1, (POZICIJA_X) 				; Resetiraj R1 (poziciju x) jer prelazimo u sljedeći red
+				LOAD R0, (SCALE)
+				ADD R2, R0, R2						; Pomakni R2 (poziciju y) za SCALE piksela
+				ADD R6, 1, R6 						; Pokazuje na sljedeću adresu BUFFER-a
+
+				SUB R3, 1, R3
+				JR_NZ LP_STPC_2
+
+KRAJ_ZNK2		POP R6								;kada je crtanje onemogućeno
+				POP R5
+				POP R4
+				POP R3
+				POP R2
+				POP R1
+				POP R0
+				RET
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 POZICIJA_X		DW 0			; Pixeli - apsolutne koordinate
 POZICIJA_Y		DW 0			; Pixeli
 
@@ -1566,6 +1658,8 @@ PRETH_PRNT		DW 123
 ORJ_X			DW 0
 ORJ_Y			DW 0
 PAMTI_ORJ		DW 0
+
+ROT90			DW 0			;sve znakove rotira za 90
 
 UPIS_ENABLED	DW 0			;služi za kontrolu crtanja, prije crtanja UI treba postaviti u 1 i nakon crtanja vratiti u prethodno stanje
 
