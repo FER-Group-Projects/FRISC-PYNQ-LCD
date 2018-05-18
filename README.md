@@ -7,6 +7,8 @@ Zadatak: Zadatak 8 - Ispisivanje slova i znamenki
 
 Oprema:
 - LCD display
+- žice
+- protoboard
 
 Zadatak je napraviti potprogram za ispisivanje slova i znamenki na LCD zaslon. Potprogram
 preko stoga prima više parametara:
@@ -24,3 +26,7 @@ Napomene:
 određuje ispunjava li se određeni piksel bojom znaka ili pozadine
 4. U datoteci s primjerima postoji program koji koristi LCD, rutinu koja inicijalizira LCD se
 može preuzeti kompletno od tog rješenja
+
+![Alt text](/relative/path/to/img.jpg?raw=true "Optional Title")
+
+![Alt text](/Slike/opisne/1.jpg?raw=true "Upute za spajanje")
