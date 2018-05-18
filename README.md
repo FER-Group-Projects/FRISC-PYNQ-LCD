@@ -42,7 +42,7 @@ Osnovna veličina je 8x8 piksela.
 # Upute za korištenje:
 Pritisnuti sva 4 gumba odjednom u bilo kojem načinu rada za reset.
 
-Položaj switcheva definira načine rada:
+Položaj switcheva definira načine rada (SW1 - lijevi bit, SW0 - desni bit)
 
 00 - UI zastavica Z (znakovi)
     btn1 - prethodni znak u memoriji 
@@ -67,6 +67,7 @@ Položaj switcheva definira načine rada:
     btn2 - faktor skaliranja++
     btn3 - promijeni orijentaciju x
     btn4 - promijeni orijentaciju y
+	
     btn1 i btn2 ili btn3 i btn4 - spremanje orijentacije on/off (UI zastavica O)
     
 ![Upute za korištenje](/Slike/upute/4.jpg?raw=true "")
