@@ -30,6 +30,7 @@ može preuzeti kompletno od tog rješenja
 ![Alt text](/Slike/opisne/1.jpg?raw=true "Upute za spajanje")
 ![Alt text](/Slike/opisne/2.jpg?raw=true "Upute za spajanje")
 ![Alt text](/Slike/opisne/3.jpg?raw=true "Upute za spajanje")
+![Alt text](/Slike/opisne/4.jpg?raw=true "Upute za korištenje")
 
-![Alt text](/Slike/pokazne/8.jpg?raw=true "Upute za spajanje")
-![Alt text](/Slike/pokazne/9.jpg?raw=true "Upute za spajanje")
+![Alt text](/Slike/pokazne/8.jpg?raw=true "Primjer1")
+![Alt text](/Slike/pokazne/9.jpg?raw=true "Primjer2")
