@@ -30,6 +30,8 @@
 ;;  Kod za komunikaciju s LCD-om i crtanje pravokutnika je preuzet iz prošlogodišnjeg
 ;;   projekta "lcd-pong".
 ;;
+;;  Dodatne informacije, slike i upute: https://github.com/mlazaric/FRISC-PYNQ-LCD
+;;    Alternativni link: https://github.com/TinBlazevic/FRISC-PYNQ-LCD
 ;;-----------------------------------------------------------------------------------------
 
 ;; adrese ulazno/izlaznih jedinica  
@@ -286,6 +288,11 @@ RESET_LCD       LOAD R0, (CRNA)
                 CALL UI_DRAW_STUP
                 CALL UI_DRAW_REDK
                 CALL UI_DRAW_SCAL
+
+                MOVE 123, R0
+                STORE R0, (PRETH_MODE)
+                STORE R0, (PRETH_ORJP)
+                STORE R0, (PRETH_PRNT)
                 CALL UI_DRAW_ZAST
 
                 JR GLAVNA_PETLJA
@@ -826,13 +833,14 @@ ZOVI_RESET      PUSH R0                     ;resetira poziciju na 0,0, scale, zn
                 LOAD R0, (ZNAK_PNT)
                 MOVE 0, R0
                 STORE R0, (ZNAK_PNT)
+                CALL BUFFER_ZNAK
                 
                 LOAD R0, (SCALE)
                 MOVE 1, R0
                 STORE R0, (SCALE)
                 
                 LOAD R0, (PAMTI_ORJ)
-                MOVE 0, R0
+                MOVE 1, R0
                 STORE R0, (PAMTI_ORJ)
                 
                 LOAD R0, (ORJ_X)
@@ -1595,7 +1603,7 @@ PRETH_PRNT      DW 123          ; Prethodna vrijednost UPIS_ENABLED-a, koristimo
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ORJ_X           DW 0            ; Trenutna orijentacija s obzirom na x-os. Odnosno je li trenutni znak zrcaljen s obzirom na x-os.
 ORJ_Y           DW 0            ; Trenutna orijentacija s obzirom na y-os. Odnosno je li trenutni znak zrcaljen s obzirom na y-os.
-PAMTI_ORJ       DW 0            ; Zastavica treba li zapamtiti orijentaciju, odnosno treba li provjeriti ORJ_X i ORJ_Y pri odabiru novog znaka
+PAMTI_ORJ       DW 1            ; Zastavica treba li zapamtiti orijentaciju, odnosno treba li provjeriti ORJ_X i ORJ_Y pri odabiru novog znaka
                                 ; i zrcaliti u slučaju da su postavljene na 1.
 
 UPIS_ENABLED    DW 0            ; Služi za kontrolu crtanja, prije crtanja UI treba postaviti u 1 i nakon crtanja vratiti u prethodno stanje
@@ -1749,7 +1757,7 @@ ZNAKOVI         DB %B 00000000, %B 00000000, %B 00000000, %B 00000000, %B 000000
                 DB %B 00000000, %B 01100011, %B 01110011, %B 01111011, %B 01101111, %B 01100111, %B 01100011, %B 01100011 ;n
                 
                 DB %B 00000000, %B 00111100, %B 01100110, %B 01100110, %B 01100110, %B 01100110, %B 01100110, %B 00111100 ;o
-                
+
                 DB %B 00000000, %B 01111100, %B 01100110, %B 01100110, %B 01100110, %B 01111100, %B 01100000, %B 01100000 ;p
                 
                 DB %B 00000000, %B 00111100, %B 01100110, %B 01100110, %B 01100110, %B 01101110, %B 00111100, %B 00000110 ;q
