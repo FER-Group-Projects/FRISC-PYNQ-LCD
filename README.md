@@ -94,17 +94,19 @@ Položaj switcheva definira načine rada (SW1 - lijevi bit, SW0 - desni bit)
 	
  * **btn1 i btn2** ili **btn3 i btn4** - spremanje orijentacije on/off (UI zastavica O)
     
-![Upute za korištenje](/Slike/upute/4.jpg?raw=true "")
+![Upute za korištenje](Slike/upute/4.jpg)
 
 
 ## Upute za spajanje:
 
-![Upute za spajanje1](/Slike/upute/1.jpg?raw=true "")
-![Upute za spajanje2](/Slike/upute/2.jpg?raw=true "")
-![Upute za spajanje3](/Slike/upute/3.jpg?raw=true "")
+![Upute za spajanje1](Slike/upute/1.jpg)
+![Upute za spajanje2](Slike/upute/2.jpg)
+![Upute za spajanje3](Slike/upute/3.jpg)
 
 
 ## Primjeri:
 
-![Primjer1](/Slike/primjeri/8.jpg?raw=true "")
-![Primjer2](/Slike/primjeri/9.jpg?raw=true "")
+![Primjer1](Slike/primjeri/11.jpg)
+![Primjer2](Slike/primjeri/10.jpg)
+![Primjer3](Slike/primjeri/9.jpg)
+![Primjer4](Slike/primjeri/8.jpg)
