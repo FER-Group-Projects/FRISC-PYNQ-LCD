@@ -11,6 +11,7 @@
   - [01 - UI zastavica B (boje)](#01---ui-zastavica-b-boje)
   - [10 - UI zastavica N (navigacija)](#10---ui-zastavica-n-navigacija)
   - [11 - UI zastavica S (skaliranje)](#11---ui-zastavica-s-skaliranje)
+- [Napomene](#napomene)
 - [Upute za spajanje](#upute-za-spajanje)
 - [Primjeri](#primjeri)
 
@@ -93,6 +94,10 @@ Položaj switcheva definira načine rada (SW1 - lijevi bit, SW0 - desni bit)
 | btn0 | Zrcali s obzirom na y-os         | 
 	
  * **btn1 i btn2** ili **btn3 i btn4** - spremanje orijentacije on/off (UI zastavica O)
+ 
+ ## Napomene:
+ 
+Operacije koje koriste više od jednog gumba su dodane u letu. Prilikom pritiska jednog gumba prije nego što se registrira drugi može doći do promjene parametara. Ako je uključena zastavica P, znak će se ispisivati prilikom svake promjene parametara, ako je velik faktor skaliranja, gumbi nakon prvog se neće registrirati dok ne završi ispisivanje znaka. Razlog ovome je nedostatak dugmadi.
     
 ![Upute za korištenje](Slike/upute/4.jpg)
 
