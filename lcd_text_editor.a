@@ -25,7 +25,7 @@
 ;;
 ;;-----------------------------------------------------------------------------------------
 ;;
-;;  Projekt izradili: Marko Lazarić i Tin Blažević
+;;  Projekt izradili: Marko Lazarić(marko.lazaric@fer.hr) i Tin Blažević(tin.blazevic@fer.hr)
 ;;
 ;;  Kod za komunikaciju s LCD-om i crtanje pravokutnika je preuzet iz prošlogodišnjeg
 ;;   projekta "lcd-pong".
