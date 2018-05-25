@@ -100,7 +100,7 @@ Položaj switcheva definira načine rada (SW1 - lijevi bit, SW0 - desni bit)
 
  ## Napomene:
  
-Operacije koje koriste više od jednog gumba su dodane u letu. Prilikom pritiska jednog gumba prije nego što se registrira drugi može doći do promjene parametara. Ako je uključena zastavica P, znak će se ispisivati prilikom svake promjene parametara, ako je velik faktor skaliranja, gumbi nakon prvog se neće registrirati dok ne završi ispisivanje znaka. Razlog ovome je nedostatak slobodnih gumba.
+Operacije koje koriste više od jednog gumba su dodane u letu. Prilikom pritiska jednog gumba prije nego što se registrira drugi može doći do promjene parametara. Ako je uključena zastavica P, znak će se ispisivati prilikom svake promjene parametara, ako je velik faktor skaliranja, gumbi nakon prvog se neće registrirati dok ne završi ispisivanje znaka. Razlog ovome je nedostatak slobodnih gumba. Prije korištenja operacija s više gumba treba isključiti zastavicu P, a nakon treba provjeriti parametre.
 
 ## Upute za spajanje:
 
