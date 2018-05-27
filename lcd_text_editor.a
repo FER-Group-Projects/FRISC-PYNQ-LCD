@@ -775,11 +775,30 @@ UPISI_ZNAK
 				RET
 
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+DSBL_X_ORJ		PUSH R0
+				LOAD R0, (ORJ_X)
+				MOVE 0, R0
+				STORE R0, (ORJ_X)
+				POP R0
+				RET
+				
+DSBL_Y_ORJ		PUSH R0
+				LOAD R0, (ORJ_Y)
+				MOVE 0, R0
+				STORE R0, (ORJ_Y)
+				POP R0
+				RET
+				
+DSBL_ORJ		CALL DSBL_X_ORJ
+				CALL DSBL_Y_ORJ
+				RET
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------				
 SWCH_ROT90		PUSH R0
 				LOAD R0, (ROT90)
 				XOR R0, 1, R0
 				STORE R0, (ROT90)
 				POP R0
+				CALL DSBL_ORJ				;u ROT90 se ulazi tako da se promijene obje orijentacije istovremeno, to možda ne želimo
 				CALL UI_DRAW_ALL
 				RET
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1576,8 +1595,8 @@ ISP_ZNK_ROT90	PUSH R0
 				PUSH R5
 				PUSH R6
 				
-				LOAD R1, (POZICIJA_X)
-				LOAD R2, (POZICIJA_Y)
+				LOAD R1, (POZICIJA_Y)
+				LOAD R2, (POZICIJA_X)
 
 				MOVE BUFFER, R6
 				MOVE 8, R3 							; Vanjski brojač - 8 zato što bitmapa ima 8 redova
@@ -1616,14 +1635,14 @@ ZNK_AR2_PAINT	LOAD R0, (R0+BOJE)					; Učitamo boju u R0. Adresa boje je određ
 				ADD SP, 14, SP
 
 				LOAD R0, (SCALE) 					 
-				ADD R1, R0, R1						; Pomakni R1 (poziciju x) za SCALE piksela
+				ADD R2, R0, R2						; Pomakni R1 (poziciju Y) za SCALE piksela
 
 				SUB R4, 1, R4
 				JR_NZ LP_REDK_2
 
-				LOAD R1, (POZICIJA_X) 				; Resetiraj R1 (poziciju x) jer prelazimo u sljedeći red
+				LOAD R1, (POZICIJA_Y) 				; Resetiraj R1 (poziciju Y) jer prelazimo u sljedeći STUPAC
 				LOAD R0, (SCALE)
-				ADD R2, R0, R2						; Pomakni R2 (poziciju y) za SCALE piksela
+				ADD R1, R0, R1						; Pomakni R2 (poziciju X) za SCALE piksela
 				ADD R6, 1, R6 						; Pokazuje na sljedeću adresu BUFFER-a
 
 				SUB R3, 1, R3
