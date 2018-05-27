@@ -1635,14 +1635,15 @@ ZNK_AR2_PAINT	LOAD R0, (R0+BOJE)					; Učitamo boju u R0. Adresa boje je određ
 				ADD SP, 14, SP
 
 				LOAD R0, (SCALE) 					 
-				ADD R2, R0, R2						; Pomakni R1 (poziciju Y) za SCALE piksela
+				ADD R1, R0, R1						; Pomakni R1 (poziciju Y) za SCALE piksela
 
 				SUB R4, 1, R4
 				JR_NZ LP_REDK_2
 
 				LOAD R1, (POZICIJA_Y) 				; Resetiraj R1 (poziciju Y) jer prelazimo u sljedeći STUPAC
 				LOAD R0, (SCALE)
-				ADD R1, R0, R1						; Pomakni R2 (poziciju X) za SCALE piksela
+				ADD R2, R0, R2						; Pomakni R2 (poziciju X) za SCALE piksela
+
 				ADD R6, 1, R6 						; Pokazuje na sljedeću adresu BUFFER-a
 
 				SUB R3, 1, R3
@@ -1676,7 +1677,9 @@ PRETH_PRNT		DW 123
 
 ORJ_X			DW 0
 ORJ_Y			DW 0
-PAMTI_ORJ		DW 0
+PAMTI_ORJ		DW 1
+
+ROT90			DW 0			;sve znakove rotira za 90
 
 ROT90			DW 0			;sve znakove rotira za 90
 

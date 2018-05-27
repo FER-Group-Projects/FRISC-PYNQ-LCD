@@ -1,3 +1,4 @@
+
 # FRISC-PYNQ-lab2
 
 [@Marko Lazarić](https://github.com/mlazaric), [@Tin Blažević](https://github.com/TinBlazevic)
@@ -68,8 +69,13 @@ Položaj switcheva definira načine rada (SW1 - lijevi bit, SW0 - desni bit)
     btn2 - faktor skaliranja++  
     btn1 - promijeni orijentaciju x  
     btn0 - promijeni orijentaciju y  
+<<<<<<< HEAD
 	
     btn1 i btn2 ili btn3 i btn4 - spremanje orijentacije on/off (UI zastavica O)
+=======
+    btn3 i btn2 - spremanje orijentacije on/off (UI zastavica O)
+    btn1 i btn0 - rotacija svih znakova za 90
+>>>>>>> fad5455988d6c87a98cf4458262a860e8e0c7876
     
 ![Upute za korištenje](/Slike/upute/4.jpg?raw=true "")
 
